@@ -6,7 +6,7 @@ try{const ex=await window.api.extraQuestions();
   ex.forEach((q,i)=>{let ti=D.top.indexOf(q.topic);if(ti<0){D.top.push(q.topic||'From class slides');ti=D.top.indexOf(q.topic||'From class slides')}
    D.bank.push({id:100000+i,t:ti,s:q.srcLabel?(D.src.indexOf(q.srcLabel)<0?(D.src.push(q.srcLabel),D.src.length-1):D.src.indexOf(q.srcLabel)):si,q:q.q,o:q.o,a:q.a,r:q.r||'No rationale provided.'})})}}catch(e){}
 const $=s=>document.querySelector(s);const app=$('#practice');
-const L='ABCD';
+const L='ABCDEFGH';
 let st={};
 let P={a:{}};let saveState='';let dbDoc=null;let saving=false,dirty=false;
 function lsGet(){try{const v=localStorage.getItem('nur283_progress');return v?JSON.parse(v):null}catch(e){return null}}
@@ -47,10 +47,10 @@ async function initStore(){
     }
   }catch(e){}
 }
-function saveRun(){P.run={t:Date.now(),i:st.i,l:st.run.map(x=>({id:x.q.id,idx:x.idx,pick:x.pick}))};flush()}
+function saveRun(){P.run={t:Date.now(),i:st.i,l:st.run.map(x=>({id:x.q.id,idx:x.idx,pick:x.pick,sel:x.sel}))};flush()}
 function savedRun(){
   const r=P.run;if(!r||!r.l||!r.l.length)return null;
-  const run=r.l.map(x=>{const q=D.bank.find(b=>b.id===x.id);return q?{q,idx:x.idx,pick:x.pick}:null});
+  const run=r.l.map(x=>{const q=D.bank.find(b=>b.id===x.id);return q?{q,idx:x.idx,pick:x.pick,sel:x.sel}:null});
   if(run.some(x=>!x))return null;return{run,i:Math.min(r.i||0,run.length-1)}
 }
 function resume(){const s=savedRun();if(!s){home();return}st.run=s.run;const f=s.run.findIndex(x=>x.pick===null);st.i=f<0?s.i:f;show()}
@@ -78,7 +78,7 @@ function chatHTML(t){
   return`<div class="chat"><h3>Ask a follow-up</h3>${(t.chat||[]).map(m=>`<div class="cm ${m.role}">${fmt(m.content)}</div>`).join('')}<div id="cb"></div>
   <div class="chips">${['Why are the other options wrong?','Explain the concept simply','Give me a similar practice question'].map(c=>`<button data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
   <textarea id="ci" rows="2" placeholder="Ask anything about this question…"></textarea><button class="p" id="ca" style="width:100%">Ask</button></div>`}
-function ctxFor(t){const q=t.q;return`You are an NCLEX-RN tutor helping a nursing student (NUR 283 comprehensive exam prep). Answer follow-up questions about the practice question below. Be accurate, NCLEX-focused and concise (under about 150 words unless asked for more). Use plain text; **bold** is OK. If you think the keyed answer is clinically wrong or questionable, say so plainly, since some keys came from imperfect source material.\n\nQuestion: ${q.q}\nOptions:\n${t.idx.map((oi,k)=>L[k]+'. '+q.o[oi]).join('\n')}\nKeyed correct answer: ${L[t.idx.indexOf(q.a)]}\nStudent chose: ${t.pick===null?'(not answered)':L[t.pick]}\nRationale on file: ${q.r}`}
+function ctxFor(t){const q=t.q;return`You are an NCLEX-RN tutor helping a nursing student (NUR 283 comprehensive exam prep). Answer follow-up questions about the practice question below. Be accurate, NCLEX-focused and concise (under about 150 words unless asked for more). Use plain text; **bold** is OK. If you think the keyed answer is clinically wrong or questionable, say so plainly, since some keys came from imperfect source material.\n\nQuestion: ${q.q}\nOptions:\n${t.idx.map((oi,k)=>L[k]+'. '+q.o[oi]).join('\n')}\nKeyed correct answer: ${corLetters(t)}\nStudent chose: ${t.pick===null?'(not answered)':(Array.isArray(t.pick)?t.pick.map(k=>L[k]).join(', '):L[t.pick])}\nRationale on file: ${q.r}`}
 async function ask(t,text){
   text=(text||'').trim();if(!text||!SM)return;
   const btn=$('#ca');btn.disabled=true;$('#ci').disabled=true;
@@ -102,6 +102,10 @@ function wireChat(t){
   $('#ca').onclick=()=>ask(t,$('#ci').value);
   document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>ask(t,b.dataset.c));
 }
+function isOk(x){const a=x.q.a;if(Array.isArray(a)){const p=(x.pick||[]).map(k=>x.idx[k]).sort().join();return p===a.slice().sort().join()}return x.idx[x.pick]===a}
+function corLetters(t){const a=t.q.a;return Array.isArray(a)?t.idx.map((oi,k)=>a.includes(oi)?L[k]:null).filter(Boolean).join(', '):L[t.idx.indexOf(a)]}
+function corText(q){return Array.isArray(q.a)?q.a.map(i=>q.o[i]).join('; '):q.o[q.a]}
+function pickText(x){return Array.isArray(x.q.a)?(x.pick||[]).map(k=>x.q.o[x.idx[k]]).join('; '):x.q.o[x.idx[x.pick]]}
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
 function home(){
   const counts=D.src.map((_,i)=>D.bank.filter(q=>q.s===i).length);
@@ -136,33 +140,40 @@ function getPool(p){if(p==='all')return D.bank;if(p==='missed'){const m=missedId
   if(p[0]==='t')return D.bank.filter(q=>q.t===+p.slice(1));return D.bank.filter(q=>q.s===+p)}
 function start(p,n,sh){
   let pool=getPool(p);pool=sh?shuffle(pool):pool.slice();pool=pool.slice(0,n);
-  st.run=pool.map(q=>{let idx=[0,1,2,3].slice(0,q.o.length);if(sh)idx=shuffle(idx);return{q,idx,pick:null}});
+  st.run=pool.map(q=>{let idx=q.o.map((_,i)=>i);if(sh)idx=shuffle(idx);return{q,idx,pick:null}});
   st.i=0;saveRun();show();
 }
 function show(){
   const t=st.run[st.i],q=t.q,n=st.run.length;
-  const ans=t.pick!==null;
-  app.innerHTML=`<div class="top"><span>Question ${st.i+1} of ${n}</span><span>${st.run.filter(x=>x.pick!==null&&x.idx[x.pick]===x.q.a).length} correct</span></div>
+  const ans=t.pick!==null;const multi=Array.isArray(q.a);
+  app.innerHTML=`<div class="top"><span>Question ${st.i+1} of ${n}</span><span>${st.run.filter(x=>x.pick!==null&&isOk(x)).length} correct</span></div>
   <div class="bar"><i style="width:${(st.i+(ans?1:0))/n*100}%"></i></div>
   <div class="card"><div class="q">${esc(q.q)}</div>
-  ${t.idx.map((oi,k)=>{let c='';if(ans){if(oi===q.a)c='ok';else if(k===t.pick)c='bad';else c='dim'}return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${L[k]}.</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
+  ${multi?'<div class="cnt" style="margin:-6px 0 10px">Select all that apply</div>':''}${t.idx.map((oi,k)=>{let c='',mk='';
+    if(multi){const chosen=ans?t.pick.includes(k):(t.sel||[]).includes(k);const corr=q.a.includes(oi);
+      if(ans){if(corr)c='ok';else if(chosen)c='bad';else c='dim';mk=chosen?'☑':'☐'}else{c=chosen?'sel':'';mk=chosen?'☑':'☐'}
+      return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${mk}</b><span>${L[k]}. ${esc(q.o[oi])}</span></button>`}
+    if(ans){if(oi===q.a)c='ok';else if(k===t.pick)c='bad';else c='dim'}return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${L[k]}.</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
   ${ans?rat(t)+chatHTML(t):''}
   <div class="src">${esc(D.src[q.s])} · ${esc(D.top[q.t])}</div></div>
-  <div class="nav"><button id="ex">Save &amp; exit</button><button class="p" id="nx" ${ans?'':'disabled'}>${st.i===n-1?'See results':'Next'}</button></div>`;
-  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{t.pick=+b.dataset.k;const ok=t.idx[t.pick]===q.a;record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
+  <div class="nav"><button id="ex">Save &amp; exit</button><button class="p" id="nx" ${ans||(multi&&t.sel&&t.sel.length)?'':'disabled'}>${ans?(st.i===n-1?'See results':'Next'):(multi?'Submit answer':'Next')}</button></div>`;
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;
+    if(multi){t.sel=t.sel||[];const i=t.sel.indexOf(k);if(i<0)t.sel.push(k);else t.sel.splice(i,1);show();return}
+    t.pick=k;const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
   wireChat(t);
-  $('#nx').onclick=()=>{if(st.i===n-1)results();else{st.i++;saveRun();show();window.scrollTo(0,0)}};
+  $('#nx').onclick=()=>{if(multi&&!ans){t.pick=(t.sel||[]).slice().sort((a,b)=>a-b);const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});return}
+    if(st.i===n-1)results();else{st.i++;saveRun();show();window.scrollTo(0,0)}};
   $('#ex').onclick=()=>{saveRun();home()};
 }
-function rat(t){const ok=t.idx[t.pick]===t.q.a;const cor=t.idx.indexOf(t.q.a);
-  return`<div class="rat ${ok?'ok':'bad'}"><strong>${ok?'Correct':'Incorrect'} — answer: ${L[cor]}</strong>${esc(t.q.r)}</div>`}
+function rat(t){const ok=isOk(t);
+  return`<div class="rat ${ok?'ok':'bad'}"><strong>${ok?'Correct':'Incorrect'} — answer: ${corLetters(t)}</strong>${esc(t.q.r).replace(/\n/g,'<br>')}</div>`}
 function results(){
   delete P.run;flush();
-  const done=st.run.filter(x=>x.pick!==null);const ok=done.filter(x=>x.idx[x.pick]===x.q.a).length;const pct=done.length?Math.round(ok/done.length*100):0;
-  const wrong=done.filter(x=>x.idx[x.pick]!==x.q.a);
+  const done=st.run.filter(x=>x.pick!==null);const ok=done.filter(isOk).length;const pct=done.length?Math.round(ok/done.length*100):0;
+  const wrong=done.filter(x=>!isOk(x));
   app.innerHTML=`<h1>Results</h1><div class="card"><div class="big">${ok} / ${done.length} (${pct}%)</div>
   <div class="cnt">${st.run.length-done.length?`${st.run.length-done.length} unanswered`:'All answered'}</div></div>
-  <div class="card"><h2>Missed questions (${wrong.length})</h2>${wrong.length?wrong.map(x=>`<div class="mi"><div><b>${esc(x.q.q)}</b></div><div style="margin-top:6px"><span class="tag b">Your answer</span>${esc(x.q.o[x.idx[x.pick]])}</div><div style="margin-top:4px"><span class="tag">Correct</span>${esc(x.q.o[x.q.a])}</div><div class="rat" style="margin-top:8px">${esc(x.q.r)}</div></div>`).join(''):'<div class="cnt">None — nice work.</div>'}</div>
+  <div class="card"><h2>Missed questions (${wrong.length})</h2>${wrong.length?wrong.map(x=>`<div class="mi"><div><b>${esc(x.q.q)}</b></div><div style="margin-top:6px"><span class="tag b">Your answer</span>${esc(pickText(x))}</div><div style="margin-top:4px"><span class="tag">Correct</span>${esc(corText(x.q))}</div><div class="rat" style="margin-top:8px">${esc(x.q.r)}</div></div>`).join(''):'<div class="cnt">None — nice work.</div>'}</div>
   <div class="nav"><button id="h">Home</button><button id="ip">Progress</button><button class="p" id="rt" ${missedIds().length?'':'disabled'}>Retake missed (${missedIds().length})</button></div>`;
   $('#h').onclick=home;$('#ip').onclick=improve;$('#rt').onclick=()=>start('missed',50,true);
 }
@@ -179,7 +190,7 @@ function improve(){
   ${n?`<div class="stat"><div><b>${pct}%</b><span>overall</span></div><div><b>${n}</b><span>answers</span></div><div><b>${seenQ}/${tot}</b><span>seen</span></div><div><b>${mi.length}</b><span>still wrong</span></div></div>`:'<div class="card"><div class="cnt">No answers yet. Take a test and your results will show up here.</div></div>'}
   ${wt.length?`<div class="card"><h2>Focus on these first</h2>${wt.slice(0,3).map(s=>`<div class="tr"><div class="h"><b>${esc(s.name)}</b><span class="pill">${Math.round(s.pct)}%</span></div><div class="cnt">${s.c} of ${s.n} correct</div></div>`).join('')}<button class="p" style="width:100%;margin-top:10px" id="pw">Practice weak areas (${getPool('weak').length} questions)</button></div>`:(n?'<div class="card"><h2>Focus areas</h2><div class="cnt">No topic is below 75% yet (a topic needs at least 2 answers to be flagged). Keep going.</div></div>':'')}
   ${ranked.length?`<div class="card"><h2>All topics, weakest first</h2>${ranked.map(s=>{const p=Math.round(s.pct);return`<div class="tr"><div class="h"><span>${esc(s.name)}</span><span class="pill ${p>=75?'g':''}">${p}%</span></div><div class="mb"><i style="width:${p}%;background:${col(p)}"></i></div><div class="cnt">${s.c}/${s.n} correct · ${s.seen} of ${s.total} questions seen</div><button style="margin-top:6px;padding:6px 10px;font-size:13px" data-t="${s.i}">Drill this topic</button></div>`}).join('')}${unseen.length?`<div class="cnt" style="margin-top:8px">Not started: ${unseen.map(s=>esc(s.name)).join(', ')}</div>`:''}</div>`:''}
-  ${worst.length?`<div class="card"><h2>Most-missed questions</h2>${worst.map(q=>{const o=P.a[q.id];return`<div class="mi"><div><b>${esc(q.q)}</b></div><div class="cnt" style="margin:4px 0">${esc(D.top[q.t])} · missed ${o.n-o.c} of ${o.n}${o.l?' · got it right last time':''}</div><div><span class="tag">Correct</span>${esc(q.o[q.a])}</div><div class="rat" style="margin-top:8px">${esc(q.r)}</div></div>`}).join('')}</div>`:''}
+  ${worst.length?`<div class="card"><h2>Most-missed questions</h2>${worst.map(q=>{const o=P.a[q.id];return`<div class="mi"><div><b>${esc(q.q)}</b></div><div class="cnt" style="margin:4px 0">${esc(D.top[q.t])} · missed ${o.n-o.c} of ${o.n}${o.l?' · got it right last time':''}</div><div><span class="tag">Correct</span>${esc(corText(q))}</div><div class="rat" style="margin-top:8px">${esc(q.r).replace(/\n/g,'<br>')}</div></div>`}).join('')}</div>`:''}
   <div class="nav"><button id="h">Home</button>${mi.length?`<button class="p" id="rm2">Retake missed (${mi.length})</button>`:''}</div>
   ${(n||P.run)?'<div style="text-align:center;margin-top:14px"><button id="rs" style="font-size:13px;padding:8px 12px">Clear all my progress</button></div>':''}`;
   setSv();$('#h').onclick=home;

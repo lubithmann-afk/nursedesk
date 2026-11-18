@@ -78,8 +78,17 @@ function create() {
     });
   }
 }
+function seedLibrary() {
+  try {
+    const src = path.join(__dirname, 'data', 'seed'); if (!fs.existsSync(src)) return;
+    for (const id of fs.readdirSync(src)) {
+      const dst = path.join(LIB(), id);
+      if (!fs.existsSync(path.join(dst, 'deck.json'))) { fs.mkdirSync(path.join(dst, 'media'), { recursive: true }); fs.copyFileSync(path.join(src, id, 'deck.json'), path.join(dst, 'deck.json')); }
+    }
+  } catch (e) {}
+}
 app.whenReady().then(() => {
-  reindex(); create();
+  seedLibrary(); reindex(); create();
   if (app.isPackaged) { try { require('electron-updater').autoUpdater.checkForUpdatesAndNotify(); } catch (e) {} }
 });
 app.on('window-all-closed', () => app.quit());
