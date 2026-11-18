@@ -109,16 +109,18 @@ function pickText(x){return Array.isArray(x.q.a)?(x.pick||[]).map(k=>x.q.o[x.idx
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
 const PT_NAMES=['Comp 1','Comp 2','Comp 3','Comp Bible'];
 const isDeck=s=>/^Class slides/.test(s);
-const sn=i=>{const s=D.src[i];if(isDeck(s))return s.replace(/^Class slides\s*[–-]\s*/,'').replace(/^Class slides/,'Imported');return PT_NAMES[i]||s};
+const isWq=s=>/^Weekly quiz/.test(s);
+const sn=i=>{const s=D.src[i];if(isWq(s))return s.replace(/^Weekly quiz\s*[–-]\s*/,'');if(isDeck(s))return s.replace(/^Class slides\s*[–-]\s*/,'').replace(/^Class slides/,'Imported');return PT_NAMES[i]||s};
 const cnt=i=>D.bank.filter(q=>q.s===i).length;
 function poolRows(){
-  const pt=[],dk=[];D.src.forEach((s,i)=>(isDeck(s)?dk:pt).push(i));
+  const pt=[],dk=[],wq=[];D.src.forEach((s,i)=>(isWq(s)?wq:isDeck(s)?dk:pt).push(i));
   const sel=(id,idx)=>`<select id="${id}" class="dd">${idx.map(i=>`<option value="${i}">${esc(sn(i))} (${cnt(i)})</option>`).join('')}</select>`;
   return `<label class="row"><input type="radio" name="p" value="all" checked><div><b>All questions mixed</b><div class="cnt">${D.bank.length} questions</div></div></label>
    <label class="row"><input type="radio" name="p" value="missed" id="rm"><div><b>Only questions I missed</b><div class="cnt" id="mc"></div></div></label>
    <label class="row"><input type="radio" name="p" value="weak" id="rw"><div><b>Practice my weak areas</b><div class="cnt" id="wc"></div></div></label>
    <label class="row"><input type="radio" name="p" id="rpt" value="${pt[0]}"><div style="flex:1"><b>Practice tests</b>${sel('spt',pt)}</div></label>
-   ${dk.length?`<label class="row"><input type="radio" name="p" id="rdk" value="${dk[0]}"><div style="flex:1"><b>Class PowerPoints</b>${sel('sdk',dk)}</div></label>`:''}`;
+   ${dk.length?`<label class="row"><input type="radio" name="p" id="rdk" value="${dk[0]}"><div style="flex:1"><b>Class PowerPoints</b>${sel('sdk',dk)}</div></label>`:''}
+   ${wq.length?`<label class="row"><input type="radio" name="p" id="rwq" value="wq"><div style="flex:1"><b>Weekly quizzes</b><select id="swq" class="dd"><option value="wq">All weekly quizzes (${D.bank.filter(q=>isWq(D.src[q.s])).length})</option>${wq.map(i=>`<option value="${i}">${esc(sn(i))} (${cnt(i)})</option>`).join('')}</select></div></label>`:''}`;
 }
 function home(){
   const sr=savedRun();const ans=sr?sr.run.filter(x=>x.pick!==null).length:0;
@@ -137,13 +139,13 @@ function home(){
   if(sr){$('#rsm').onclick=resume;const d=$('#dsc');d.onclick=()=>{d.textContent='Tap again to discard';d.onclick=discardRun}}
   const upd=()=>{const p=document.querySelector('input[name=p]:checked').value;const pool=getPool(p);const r=$('#r');r.max=Math.min(50,Math.max(1,pool.length));if(+r.value>+r.max)r.value=r.max;$('#n').textContent=r.value;$('#note').textContent=pool.length+' in pool';$('#go').disabled=pool.length===0};
   {$('#mc').textContent=missedIds().length+' still marked wrong (saved)';const wt=weakTopics();$('#wc').textContent=wt.length?wt.slice(0,3).map(s=>s.name).join(', ')+(wt.length>3?'…':''):'Answer more questions to find them'}
-  [['spt','rpt'],['sdk','rdk']].forEach(([s,r])=>{const S=$('#'+s);if(!S)return;S.onclick=e=>e.stopPropagation();S.onchange=()=>{const R=$('#'+r);R.value=S.value;R.checked=true;R.dispatchEvent(new Event('change'))}});
+  [['spt','rpt'],['sdk','rdk'],['swq','rwq']].forEach(([s,r])=>{const S=$('#'+s);if(!S)return;S.onclick=e=>e.stopPropagation();S.onchange=()=>{const R=$('#'+r);R.value=S.value;R.checked=true;R.dispatchEvent(new Event('change'))}});
   document.querySelectorAll('input[name=p]').forEach(e=>e.onchange=()=>{upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value});
   $('#r').oninput=()=>$('#n').textContent=$('#r').value;
   upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value;
   $('#go').onclick=()=>start(document.querySelector('input[name=p]:checked').value,+$('#r').value,$('#sh').checked);
 }
-function getPool(p){if(p==='all')return D.bank;if(p==='missed'){const m=missedIds();return D.bank.filter(q=>m.includes(q.id))}
+function getPool(p){if(p==='all')return D.bank;if(p==='wq')return D.bank.filter(q=>isWq(D.src[q.s]));if(p==='missed'){const m=missedIds();return D.bank.filter(q=>m.includes(q.id))}
   if(p==='weak'){const w=weakTopics().map(s=>s.i);const m=missedIds();return D.bank.filter(q=>w.includes(q.t)||m.includes(q.id))}
   if(p[0]==='t')return D.bank.filter(q=>q.t===+p.slice(1));return D.bank.filter(q=>q.s===+p)}
 function start(p,n,sh){

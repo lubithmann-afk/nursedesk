@@ -21,3 +21,6 @@ The Windows installer is built by GitHub Actions on each push to `main`, not loc
 
 ## Medications tab
 `data/meds.js` is generated. `python3 tools/meds/build_meds.py` scans the bundled decks (including the ATI guide, not the syllabus) and the question bank for every name in `tools/meds/lexicon.py`, and records where each medication appears. The lexicon only decides what to look for and which category/class a drug is filed under; everything shown about a drug comes from the student's own materials. Add `--report` to list drug-like words that are in the materials but missing from the lexicon. Re-run it after adding decks or questions.
+
+## Weekly quizzes
+`tools/quiz/` holds the end-of-week quiz questions exactly as supplied (`quiz_unique.json`, 252 unique multiple-choice questions from 13 quiz versions) and, for each one, whether its answer was checked against the class PowerPoints and where (`checks.json`). `python3 tools/quiz/build_bank7.py` writes `tools/bank/bank7.json`, which `build.py` appends after the other banks (so existing question ids never change). The checks use the PowerPoints only, not the ATI guide or syllabus. Matching, fill-in and image-only items from the source file are not included. After changing the bank, run `export_app.py` and then `tools/meds/build_meds.py`.
