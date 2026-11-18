@@ -11,7 +11,10 @@ const LIB = () => path.join(U(), 'library');
 const rj = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
 const wj = (f, v) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(v)); };
 
-function decks() { const d = LIB(); if (!fs.existsSync(d)) return []; return fs.readdirSync(d).filter(x => fs.existsSync(path.join(d, x, 'deck.json'))).map(x => rj(path.join(d, x, 'deck.json'))); }
+// Natural order: "Unit 2" before "Unit 10"; Unit decks first, then everything else (syllabus, guides) A-Z.
+const deckKey = d => { const u = /^Unit\s+(\d+)/i.exec(d.name || ''); return [u ? 0 : 1, u ? +u[1] : 0, d.name || '']; };
+const byDeck = (a, b) => { const x = deckKey(a), y = deckKey(b); return x[0] - y[0] || x[1] - y[1] || x[2].localeCompare(y[2], undefined, { numeric: true, sensitivity: 'base' }); };
+function decks() { const d = LIB(); if (!fs.existsSync(d)) return []; return fs.readdirSync(d).filter(x => fs.existsSync(path.join(d, x, 'deck.json'))).map(x => rj(path.join(d, x, 'deck.json'))).sort(byDeck); }
 function reindex() {
   const docs = [];
   decks().forEach(dk => dk.slides.forEach(s => docs.push({ id: dk.id + ':' + s.n, deck: dk.name, deckId: dk.id, n: s.n, title: s.title, body: [...s.text, ...(s.notes.length ? ['Notes: ' + s.notes.join(' ')] : [])].join('\n'), unit: dk.kind === 'pdf' ? 'page' : 'slide' })));
