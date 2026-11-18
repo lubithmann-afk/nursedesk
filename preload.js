@@ -12,5 +12,10 @@ contextBridge.exposeInMainWorld('api', {
   extraQuestions: () => ipcRenderer.invoke('q:extra'),
   importQuestions: () => ipcRenderer.invoke('q:import'),
   version: () => ipcRenderer.invoke('app:version'),
+  updState: () => ipcRenderer.invoke('upd:state'),
+  updCheck: () => ipcRenderer.invoke('upd:check'),
+  updDownload: () => ipcRenderer.invoke('upd:download'),
+  updInstall: () => ipcRenderer.invoke('upd:install'),
+  onUpdate: cb => ipcRenderer.on('upd:status', (_, s) => cb(s)),
   openExternal: u => ipcRenderer.invoke('open:ext', u),
 });

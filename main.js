@@ -61,6 +61,25 @@ ipcMain.handle('ai:ask', async (e, messages, extra) => {
   } catch (err) { return { ok: false, error: String(err.message || err) }; }
 });
 ipcMain.handle('app:version', () => app.getVersion());
+// ---- updates (manual download + restart from Settings) ----
+let updState = { state: app.isPackaged ? 'idle' : 'dev' };
+function setUpd(s) { updState = s; try { if (win && !win.isDestroyed()) win.webContents.send('upd:status', s); } catch (e) {} }
+let au = null;
+function initUpdater() {
+  if (!app.isPackaged) return;
+  au = require('electron-updater').autoUpdater;
+  au.autoDownload = false; au.autoInstallOnAppQuit = true;
+  au.on('checking-for-update', () => setUpd({ state: 'checking' }));
+  au.on('update-available', i => setUpd({ state: 'available', version: i.version }));
+  au.on('update-not-available', () => setUpd({ state: 'current' }));
+  au.on('download-progress', p => setUpd({ state: 'downloading', percent: Math.round(p.percent || 0) }));
+  au.on('update-downloaded', i => setUpd({ state: 'ready', version: i.version }));
+  au.on('error', e => setUpd({ state: 'error', message: String((e && e.message) || e).slice(0, 200) }));
+}
+ipcMain.handle('upd:state', () => updState);
+ipcMain.handle('upd:check', async () => { if (au) { try { await au.checkForUpdates(); } catch (e) {} } return updState; });
+ipcMain.handle('upd:download', async () => { if (au) { try { setUpd({ state: 'downloading', percent: 0 }); await au.downloadUpdate(); } catch (e) {} } return updState; });
+ipcMain.handle('upd:install', () => { if (au) au.quitAndInstall(); });
 ipcMain.handle('open:ext', (_, u) => { if (/^https:\/\//.test(u)) shell.openExternal(u); });
 
 function create() {
@@ -90,6 +109,6 @@ function seedLibrary() {
 }
 app.whenReady().then(() => {
   seedLibrary(); reindex(); create();
-  if (app.isPackaged) { try { require('electron-updater').autoUpdater.checkForUpdatesAndNotify(); } catch (e) {} }
+  try { initUpdater(); if (au) au.checkForUpdates().catch(() => {}); } catch (e) {}
 });
 app.on('window-all-closed', () => app.quit());

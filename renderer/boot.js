@@ -11,3 +11,6 @@ api.version().then(v=>{window.APP_VERSION=v;document.getElementById('ver').textC
 window.startPractice();window.slidesInit();window.aiInit();window.settingsInit();
 // open a slide from anywhere
 window.gotoSlide=(deckId,n)=>{document.querySelector('[data-t=slides]').click();window.slidesOpen(deckId,n)};
+
+const paintVer=s=>{const e=document.getElementById('ver');if(e&&window.APP_VERSION)e.textContent='v'+window.APP_VERSION+(s&&(s.state==='available'||s.state==='ready')?' · update available':'')};
+api.onUpdate(paintVer);api.updState().then(s=>setTimeout(()=>paintVer(s),300));
