@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } = require('electron');
 const fs = require('fs'); const path = require('path');
 const { parsePptx } = require('./lib/pptx');
+const { parsePdf } = require('./lib/pdf');
 const { Index } = require('./lib/search');
 const { ask, DEFAULT_DOMAINS } = require('./lib/ai');
 
@@ -13,7 +14,7 @@ const wj = (f, v) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.wr
 function decks() { const d = LIB(); if (!fs.existsSync(d)) return []; return fs.readdirSync(d).filter(x => fs.existsSync(path.join(d, x, 'deck.json'))).map(x => rj(path.join(d, x, 'deck.json'))); }
 function reindex() {
   const docs = [];
-  decks().forEach(dk => dk.slides.forEach(s => docs.push({ id: dk.id + ':' + s.n, deck: dk.name, deckId: dk.id, n: s.n, title: s.title, body: [...s.text, ...(s.notes.length ? ['Notes: ' + s.notes.join(' ')] : [])].join('\n') })));
+  decks().forEach(dk => dk.slides.forEach(s => docs.push({ id: dk.id + ':' + s.n, deck: dk.name, deckId: dk.id, n: s.n, title: s.title, body: [...s.text, ...(s.notes.length ? ['Notes: ' + s.notes.join(' ')] : [])].join('\n'), unit: dk.kind === 'pdf' ? 'page' : 'slide' })));
   idx.build(docs);
 }
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'deck';
@@ -22,19 +23,20 @@ function settings() { const s = rj(path.join(U(), 'settings.json'), {}); return 
 function getKey() { try { const f = path.join(U(), 'key.bin'); if (!fs.existsSync(f)) return ''; const b = fs.readFileSync(f); return safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(b) : b.toString('utf8'); } catch (e) { return ''; } }
 function setKey(k) { const f = path.join(U(), 'key.bin'); if (!k) { try { fs.unlinkSync(f); } catch (e) {} return; } fs.writeFileSync(f, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(k) : Buffer.from(k)); }
 
-ipcMain.handle('lib:list', () => decks().map(d => ({ id: d.id, name: d.name, slides: d.slides.length })));
+ipcMain.handle('lib:list', () => decks().map(d => ({ id: d.id, name: d.name, slides: d.slides.length, kind: d.kind || 'pptx' })));
 ipcMain.handle('lib:deck', (_, id) => { const d = rj(path.join(LIB(), id, 'deck.json')); if (!d) return null; d.dir = path.join(LIB(), id, 'media'); return d; });
 ipcMain.handle('lib:remove', (_, id) => { fs.rmSync(path.join(LIB(), path.basename(id)), { recursive: true, force: true }); reindex(); return true; });
 ipcMain.handle('lib:search', (_, q) => idx.search(q, 25));
 ipcMain.handle('lib:import', async () => {
-  const r = await dialog.showOpenDialog(win, { title: 'Import PowerPoints', filters: [{ name: 'PowerPoint', extensions: ['pptx'] }], properties: ['openFile', 'multiSelections'] });
+  const r = await dialog.showOpenDialog(win, { title: 'Import to library', filters: [{ name: 'PowerPoints and PDFs', extensions: ['pptx', 'pdf'] }], properties: ['openFile', 'multiSelections'] });
   const done = [], failed = [];
   for (const f of r.filePaths || []) {
     try {
       const name = path.basename(f, path.extname(f)); const id = slug(name); const dir = path.join(LIB(), id);
       fs.mkdirSync(path.join(dir, 'media'), { recursive: true });
-      const slides = await parsePptx(fs.readFileSync(f), path.join(dir, 'media'), fs);
-      wj(path.join(dir, 'deck.json'), { id, name, slides }); done.push(name);
+      const isPdf = /\.pdf$/i.test(f);
+      const slides = isPdf ? await parsePdf(fs.readFileSync(f)) : await parsePptx(fs.readFileSync(f), path.join(dir, 'media'), fs);
+      wj(path.join(dir, 'deck.json'), isPdf ? { id, name, kind: 'pdf', slides } : { id, name, slides }); done.push(name);
     } catch (e) { failed.push(path.basename(f) + ': ' + e.message); }
   }
   reindex(); return { done, failed };

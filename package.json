@@ -9,8 +9,9 @@
     "test": "node test/test.js"
   },
   "dependencies": {
+    "electron-updater": "^6.3.0",
     "jszip": "^3.10.1",
-    "electron-updater": "^6.3.0"
+    "pdfjs-dist": "^3.11.174"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -25,7 +26,11 @@
       "lib/**",
       "renderer/**",
       "data/**",
-      "package.json"
+      "package.json",
+      "!node_modules/pdfjs-dist/{build,web}/**",
+      "!node_modules/pdfjs-dist/legacy/web/**",
+      "!**/*.map",
+      "!node_modules/{canvas,nan,@mapbox}/**"
     ],
     "win": {
       "target": "nsis"
@@ -42,6 +47,7 @@
       "oneClick": true,
       "perMachine": false,
       "artifactName": "NurseDesk-Setup.exe"
-    }
+    },
+    "npmRebuild": false
   }
 }
