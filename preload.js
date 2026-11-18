@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   search: q => ipcRenderer.invoke('lib:search', q),
   getSettings: () => ipcRenderer.invoke('set:get'),
   saveSettings: s => ipcRenderer.invoke('set:save', s),
-  ask: (messages, extra) => ipcRenderer.invoke('ai:ask', messages, extra),
+  ask: (messages, extra, opts) => ipcRenderer.invoke('ai:ask', messages, extra, opts),
   onStatus: cb => ipcRenderer.on('ai:status', (_, s) => cb(s)),
   extraQuestions: () => ipcRenderer.invoke('q:extra'),
   importQuestions: () => ipcRenderer.invoke('q:import'),

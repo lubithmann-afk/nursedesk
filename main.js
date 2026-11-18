@@ -59,9 +59,9 @@ ipcMain.handle('set:save', (_, s) => {
   if (Array.isArray(s.domains)) wj(path.join(U(), 'settings.json'), { domains: s.domains.map(x => x.trim()).filter(Boolean) });
   return { hasKey: !!getKey() };
 });
-ipcMain.handle('ai:ask', async (e, messages, extra) => {
+ipcMain.handle('ai:ask', async (e, messages, extra, opts) => {
   try {
-    const r = await ask(messages, { key: getKey(), domains: settings().domains, extraSystem: extra || '', searchSlides: q => idx.search(q, 6), onStatus: s => e.sender.send('ai:status', s) });
+    const r = await ask(messages, { key: getKey(), domains: settings().domains, extraSystem: extra || '', allowWeb: !!(opts && opts.web === true), searchSlides: q => idx.search(q, 6), onStatus: s => e.sender.send('ai:status', s) });
     return { ok: true, ...r };
   } catch (err) { return { ok: false, error: String(err.message || err) }; }
 });
