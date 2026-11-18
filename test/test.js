@@ -21,6 +21,21 @@ let calls=0;global.fetch=async(u,o)=>{calls++;const b=JSON.parse(o.body);
  const body=calls===1?{stop_reason:'tool_use',content:[{type:'tool_use',id:'t1',name:'search_library',input:{query:'warfarin antidote'}}]}:{stop_reason:'end_turn',content:[{type:'text',text:'Vitamin K [Sample, slide 1]'}]};
  if(calls===2){const tr=b.messages[b.messages.length-1].content[0];console.assert(/slide 1/.test(tr.content),'tool result has slide')}
  return{ok:true,json:async()=>body}};
-const res=await ai.ask([{role:'user',content:'antidote for warfarin?'}],{key:'k',domains:ai.DEFAULT_DOMAINS,searchSlides:q=>ix.search(q,5)});
-console.assert(/Vitamin K/.test(res.text),'ai text');console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
+const res=await ai.ask([{role:'user',content:'antidote for warfarin?'}],{key:'k',domains:ai.DEFAULT_DOMAINS,searchSlides:q=>ix.search(q,5),allowWeb:true});
+console.assert(/Vitamin K/.test(res.text),'ai text');// No approval: the web tool is not even offered, the AI is told to ask first, and the ask-token is turned into a flag.
+let c2=0;global.fetch=async(u,o)=>{c2++;const b=JSON.parse(o.body);
+ console.assert(!b.tools.some(t=>t.name==='web_search'),'web_search must NOT be offered without approval');
+ console.assert(/do NOT answer from memory/.test(b.system)&&/\[\[ASK_WEB\]\]/.test(b.system),'prompt tells it to ask first');
+ return{ok:true,json:async()=>({stop_reason:'end_turn',content:[{type:'text',text:'Your library does not cover this. Want me to check trusted sites?\n[[ASK_WEB]]'}]})}};
+const r2=await ai.ask([{role:'user',content:'something not in the library'}],{key:'k',domains:ai.DEFAULT_DOMAINS,searchSlides:()=>[]});
+console.assert(r2.askWeb===true&&!/ASK_WEB/.test(r2.text)&&r2.usedWeb===false,'ask flag set, token stripped');
+// Approved: web tool offered, and the prompt demands a source and URL for every web fact.
+global.fetch=async(u,o)=>{const b=JSON.parse(o.body);
+ console.assert(b.tools.some(t=>t.name==='web_search'),'web_search offered once approved');
+ console.assert(/full URL/.test(b.system)&&/APPROVED/.test(b.system),'approved prompt requires sources');
+ return{ok:true,json:async()=>({stop_reason:'end_turn',content:[{type:'text',text:'ok'}]})}};
+const r3=await ai.ask([{role:'user',content:'yes'}],{key:'k',domains:ai.DEFAULT_DOMAINS,searchSlides:()=>[],allowWeb:true});
+console.assert(r3.askWeb===false,'no ask flag when approved');
+console.log('approval tests ran');
+console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
