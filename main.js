@@ -60,6 +60,7 @@ ipcMain.handle('ai:ask', async (e, messages, extra) => {
     return { ok: true, ...r };
   } catch (err) { return { ok: false, error: String(err.message || err) }; }
 });
+ipcMain.handle('app:version', () => app.getVersion());
 ipcMain.handle('open:ext', (_, u) => { if (/^https:\/\//.test(u)) shell.openExternal(u); });
 
 function create() {
@@ -73,7 +74,7 @@ function create() {
       await new Promise(r => setTimeout(r, 1500));
       const r = await win.webContents.executeJavaScript(`(async()=>{const o={};o.quiz=document.querySelector('#practice h1')?.textContent;o.slides=document.querySelector('#slides h1')?.textContent;o.ai=!!document.querySelector('#in');
         document.querySelector('[data-t=settings]').click();await new Promise(r=>setTimeout(r,300));o.settings=!!document.querySelector('#key');
-        document.querySelector('#go').click;return o})()`);
+        document.querySelector('#theme').click();o.theme=document.documentElement.getAttribute('data-theme');o.ver=document.querySelector('#ver').textContent;o.icon=document.querySelector('#theme').textContent;return o})()`);
       console.log('RESULT', JSON.stringify(r)); app.quit();
     });
   }

@@ -11,5 +11,6 @@ contextBridge.exposeInMainWorld('api', {
   onStatus: cb => ipcRenderer.on('ai:status', (_, s) => cb(s)),
   extraQuestions: () => ipcRenderer.invoke('q:extra'),
   importQuestions: () => ipcRenderer.invoke('q:import'),
+  version: () => ipcRenderer.invoke('app:version'),
   openExternal: u => ipcRenderer.invoke('open:ext', u),
 });
