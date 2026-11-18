@@ -10,9 +10,11 @@ for m in mods:
         ids+=1
         bank.append({"id":ids,"t":tl.index(tmap.TOP[tmap.M[ids]]),"s":len(srcs)-1,"q":q,"o":o,"a":a,"r":r})
 import json as _j
-_b5=_j.load(open('bank5.json'))
 _tl=list(tmap.TOP.values());_CODE={k:v for k,v in tmap.TOP.items()}
-for q in _b5:
+# bank5: slides questions with answer keys; bank6: question slides from the Unit 6-12 decks (see tools/slides/mk6.py).
+# New banks are only ever appended so existing question ids (and saved progress) never change.
+for _f in ('bank5.json','bank6.json'):
+  for q in _j.load(open(_f)):
     if q['src'] not in srcs:srcs.append(q['src'])
     ids+=1
     bank.append({"id":ids,"t":_tl.index(_CODE[q['t']]),"s":srcs.index(q['src']),"q":q['q'],"o":q['o'],"a":q['a'],"r":q['r']})
