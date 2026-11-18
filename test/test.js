@@ -37,5 +37,15 @@ global.fetch=async(u,o)=>{const b=JSON.parse(o.body);
 const r3=await ai.ask([{role:'user',content:'yes'}],{key:'k',domains:ai.DEFAULT_DOMAINS,searchSlides:()=>[],allowWeb:true});
 console.assert(r3.askWeb===false,'no ask flag when approved');
 console.log('approval tests ran');
+// Medications data: every medication points at real library text or real questions, and every excerpt resolves.
+const MD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','meds.js'),'utf8').replace(/^window\.MEDS=/,'').replace(/;$/,''));
+const QD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,''));
+const qids=new Set(QD.bank.map(q=>q.id));
+console.assert(MD.meds.length>200,'many medications '+MD.meds.length);
+console.assert(MD.meds.every(m=>m.s.length+m.q.length>0),'every medication has a source');
+console.assert(MD.meds.every(m=>m.s.every(x=>MD.units[x.u]&&x.k.every(i=>MD.units[x.u].l[i]!==undefined))),'every excerpt resolves');
+console.assert(MD.meds.every(m=>m.q.every(id=>qids.has(id))),'every question link resolves');
+console.assert(MD.cats.flatMap(c=>c.c.flatMap(x=>x.m)).length===MD.meds.length,'every medication is in a category');
+console.log('medication data checks ran:',MD.meds.length,'medications');
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();

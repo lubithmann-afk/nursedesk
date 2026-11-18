@@ -198,6 +198,8 @@ function start(p,n,sh){
   st.run=pool.map(q=>{let idx=q.o.map((_,i)=>i);if(sh)idx=shuffle(idx);return{q,idx,pick:null}});
   st.i=0;saveRun();show();
 }
+// used by the Medications tab: practice just the questions that mention a medication
+window.practiceIds=ids=>{const set=new Set(ids);const pool=shuffle(D.bank.filter(q=>set.has(q.id)));if(!pool.length)return;st.run=pool.map(q=>({q,idx:shuffle(q.o.map((_,i)=>i)),pick:null}));st.i=0;saveRun();show();};
 function show(){
   const t=st.run[st.i],q=t.q,n=st.run.length;
   const ans=t.pick!==null;const multi=Array.isArray(q.a);

@@ -25,3 +25,21 @@ input[type=text],input[type=password],textarea.f{width:100%;font:inherit;padding
 :root[data-theme=dark]{--bg:#12151b;--card:#1b2029;--ink:#e8ebf1;--mut:#9aa4b5;--line:#2c3441;--acc:#6ea4ff;--ok:#5fd394;--okbg:#14291f;--bad:#ff8a80;--badbg:#321816}
 .ver{margin-left:auto;font-size:12px;color:var(--mut)}
 #tabs .themebtn{font-size:16px;padding:6px 10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+
+/* Medications tab */
+.mtop{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.mtop input{flex:1;min-width:220px}
+details.mcat{border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:10px;overflow:hidden}
+details.mcat>summary{cursor:pointer;padding:12px 14px;font-weight:600;display:flex;gap:10px;align-items:center;list-style:none}
+details.mcat>summary::-webkit-details-marker{display:none}
+details.mcat>summary::before{content:'▸';color:var(--mut);transition:transform .15s}details.mcat[open]>summary::before{transform:rotate(90deg)}
+details.mcat>summary .cnt{font-weight:400;margin-left:auto}
+.mbody{padding:0 14px 12px}.mcls{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px}
+.mrow{display:flex;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--bg)}
+.mrow:hover{border-color:var(--acc)}.mrow .b{color:var(--mut);font-weight:400}.mrow .cnt{white-space:nowrap}
+.msec{margin:18px 0 8px;font-size:15px}.mex{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card)}
+.mex .m{font-size:12px;color:var(--mut);margin-bottom:6px;display:flex;justify-content:space-between;gap:10px}
+.mex .m a{color:var(--acc);cursor:pointer;white-space:nowrap}.mex .ln{padding:2px 0;line-height:1.4}.mex .gap{color:var(--mut)}
+.mex mark,.mq mark{background:#ffe58a;color:#000;border-radius:3px;padding:0 2px}
+.mq{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card)}.mq .ans{margin-top:6px;color:var(--ok);font-size:14px}
+.mq details{margin-top:6px}.mq summary{cursor:pointer;color:var(--acc);font-size:13px}
+.chip{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut);margin-right:6px}

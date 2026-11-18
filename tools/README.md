@@ -18,3 +18,6 @@ This rewrites `data/questions.js`, `renderer/practice.js`, `renderer/quiz.css`, 
 
 ## Not covered
 The Windows installer is built by GitHub Actions on each push to `main`, not locally.
+
+## Medications tab
+`data/meds.js` is generated. `python3 tools/meds/build_meds.py` scans the bundled decks (including the ATI guide, not the syllabus) and the question bank for every name in `tools/meds/lexicon.py`, and records where each medication appears. The lexicon only decides what to look for and which category/class a drug is filed under; everything shown about a drug comes from the student's own materials. Add `--report` to list drug-like words that are in the materials but missing from the lexicon. Re-run it after adding decks or questions.
