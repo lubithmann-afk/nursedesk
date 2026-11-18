@@ -1,0 +1,47 @@
+{
+  "name": "nursedesk",
+  "version": "1.0.0",
+  "description": "NUR 283 study app: practice questions, slide library, and a study AI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --publish never",
+    "test": "node test/test.js"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "electron-updater": "^6.3.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.luke.nursedesk",
+    "productName": "NurseDesk",
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**",
+      "renderer/**",
+      "data/**",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "lubithmann-afk",
+        "repo": "nursedesk",
+        "releaseType": "release"
+      }
+    ],
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "NurseDesk-Setup.exe"
+    }
+  }
+}

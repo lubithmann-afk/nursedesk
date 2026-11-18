@@ -1,0 +1,196 @@
+window.startPractice=async function(){
+
+const D=window.QD;
+try{const ex=await window.api.extraQuestions();
+ if(ex&&ex.length){D.src.push('Class slides (imported)');const si=D.src.length-1;
+  ex.forEach((q,i)=>{let ti=D.top.indexOf(q.topic);if(ti<0){D.top.push(q.topic||'From class slides');ti=D.top.indexOf(q.topic||'From class slides')}
+   D.bank.push({id:100000+i,t:ti,s:q.srcLabel?(D.src.indexOf(q.srcLabel)<0?(D.src.push(q.srcLabel),D.src.length-1):D.src.indexOf(q.srcLabel)):si,q:q.q,o:q.o,a:q.a,r:q.r||'No rationale provided.'})})}}catch(e){}
+const $=s=>document.querySelector(s);const app=$('#practice');
+const L='ABCD';
+let st={};
+let P={a:{}};let saveState='';let dbDoc=null;let saving=false,dirty=false;
+function lsGet(){try{const v=localStorage.getItem('nur283_progress');return v?JSON.parse(v):null}catch(e){return null}}
+function lsSet(){try{localStorage.setItem('nur283_progress',JSON.stringify(P))}catch(e){}}
+function merge(a,b){const r={a:{}};[a,b].forEach(x=>{if(x&&x.a)for(const k in x.a){const v=x.a[k],o=r.a[k];if(!o||(v.t||0)>(o.t||0))r.a[k]=v}});if(a&&a.run)r.run=a.run;if(b&&b.run&&(!r.run||(b.run.t||0)>(r.run.t||0)))r.run=b.run;return r}
+function setSv(){const e=$('#sv');if(e)e.textContent=saveState}
+async function flush(){
+  lsSet();
+  if(!dbDoc){saveState='Saved on this device';setSv();return}
+  if(saving){dirty=true;return}
+  saving=true;
+  try{await dbDoc.set(P);saveState='Saved to your account'}catch(e){saveState='Saved on this device (account sync failed)'}
+  saving=false;setSv();
+  if(dirty){dirty=false;flush()}
+}
+async function initStore(){
+  const l=lsGet();if(l){P=merge(P,l)}
+  saveState='Saved on this device';
+  try{
+    const to=new Promise(r=>setTimeout(()=>r(null),10000));
+    const go=(async()=>{
+      const db=await claude.use('db');const user=await claude.use('user');
+      if(!db||!user)return null;
+      const id=await user.id();if(!id)return null;
+      return db.collection('data/users/'+id).doc('progress');
+    })();
+    const d=await Promise.race([go,to]);
+    if(d){
+      dbDoc=d;
+      let snap=await d.get();
+      const ex=typeof snap.exists==='function'?snap.exists():snap.exists;
+      const data=ex?(typeof snap.data==='function'?snap.data():snap.data):null;
+      P=merge(data,P);
+      lsSet();
+      saveState='Saved to your account';
+      if(JSON.stringify(P)!==JSON.stringify(data))flush();
+      if(!st.run)home();else setSv();
+    }
+  }catch(e){}
+}
+function saveRun(){P.run={t:Date.now(),i:st.i,l:st.run.map(x=>({id:x.q.id,idx:x.idx,pick:x.pick}))};flush()}
+function savedRun(){
+  const r=P.run;if(!r||!r.l||!r.l.length)return null;
+  const run=r.l.map(x=>{const q=D.bank.find(b=>b.id===x.id);return q?{q,idx:x.idx,pick:x.pick}:null});
+  if(run.some(x=>!x))return null;return{run,i:Math.min(r.i||0,run.length-1)}
+}
+function resume(){const s=savedRun();if(!s){home();return}st.run=s.run;const f=s.run.findIndex(x=>x.pick===null);st.i=f<0?s.i:f;show()}
+function discardRun(){delete P.run;flush();home()}
+function record(q,ok){
+  const o=P.a[q.id]||{n:0,c:0,l:1,t:0};
+  o.n++;if(ok)o.c++;o.l=ok?1:0;o.t=Date.now();P.a[q.id]=o;flush();
+}
+function missedIds(){return D.bank.filter(q=>P.a[q.id]&&P.a[q.id].l===0).map(q=>q.id)}
+function topicStats(){
+  return D.top.map((name,i)=>{
+    const qs=D.bank.filter(q=>q.t===i);let n=0,c=0,seen=0;
+    qs.forEach(q=>{const o=P.a[q.id];if(o){seen++;n+=o.n;c+=o.c}});
+    return{i,name,total:qs.length,seen,n,c,pct:n?c/n*100:null}
+  });
+}
+function weakTopics(){return topicStats().filter(s=>s.n>=2&&s.pct<75).sort((a,b)=>a.pct-b.pct)}
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+let SM=null;
+async function initSample(){try{const s=await claude.use('sample');if(s){SM=s;if(st.run&&$('.rat')&&!$('#ci'))show()}}catch(e){}}
+function fmt(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')}
+function chatHTML(t){
+  if(!SM)return'';
+  return`<div class="chat"><h3>Ask a follow-up</h3>${(t.chat||[]).map(m=>`<div class="cm ${m.role}">${fmt(m.content)}</div>`).join('')}<div id="cb"></div>
+  <div class="chips">${['Why are the other options wrong?','Explain the concept simply','Give me a similar practice question'].map(c=>`<button data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+  <textarea id="ci" rows="2" placeholder="Ask anything about this question…"></textarea><button class="p" id="ca" style="width:100%">Ask</button></div>`}
+function ctxFor(t){const q=t.q;return`You are an NCLEX-RN tutor helping a nursing student (NUR 283 comprehensive exam prep). Answer follow-up questions about the practice question below. Be accurate, NCLEX-focused and concise (under about 150 words unless asked for more). Use plain text; **bold** is OK. If you think the keyed answer is clinically wrong or questionable, say so plainly, since some keys came from imperfect source material.\n\nQuestion: ${q.q}\nOptions:\n${t.idx.map((oi,k)=>L[k]+'. '+q.o[oi]).join('\n')}\nKeyed correct answer: ${L[t.idx.indexOf(q.a)]}\nStudent chose: ${t.pick===null?'(not answered)':L[t.pick]}\nRationale on file: ${q.r}`}
+async function ask(t,text){
+  text=(text||'').trim();if(!text||!SM)return;
+  const btn=$('#ca');btn.disabled=true;$('#ci').disabled=true;
+  t.chat=t.chat||[];t.chat.push({role:'user',content:text});
+  const box=$('#cb');box.insertAdjacentHTML('beforebegin',`<div class="cm user">${fmt(text)}</div>`);
+  box.innerHTML='<div class="cm assistant">Thinking…</div>';
+  const msgs=t.chat.map((m,i)=>i===0?{role:m.role,content:ctxFor(t)+'\n\nStudent: '+m.content}:m);
+  try{
+    const r=await SM(msgs,{cache:false,onText:({text})=>{box.innerHTML='<div class="cm assistant">'+fmt(text)+'</div>'}});
+    t.chat.push({role:'assistant',content:r.text});
+    box.innerHTML='';box.insertAdjacentHTML('beforebegin',`<div class="cm assistant">${fmt(r.text)}</div>`);
+  }catch(e){
+    t.chat.pop();
+    box.innerHTML=`<div class="cm assistant">${e&&e.code==='rate_limited'?'Too many requests right now. Wait a moment and try again.':e&&e.code==='not_granted'?'Follow-up questions are not available here.':'Could not get an answer. Try again.'}</div>`;
+    $('#cb').previousElementSibling&&0;
+  }
+  btn.disabled=false;const ci=$('#ci');ci.disabled=false;ci.value='';
+}
+function wireChat(t){
+  if(!SM||!$('#ci'))return;
+  $('#ca').onclick=()=>ask(t,$('#ci').value);
+  document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>ask(t,b.dataset.c));
+}
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function home(){
+  const counts=D.src.map((_,i)=>D.bank.filter(q=>q.s===i).length);
+  const sr=savedRun();const ans=sr?sr.run.filter(x=>x.pick!==null).length:0;
+  app.innerHTML=`<h1>NUR 283 Comp Practice Tests</h1>
+  <p class="sub">${D.bank.length} questions from your six PDFs, with an NCLEX-style rationale after every answer.</p>
+  ${sr?`<div class="card" style="border-color:var(--acc)"><h2>Unfinished test</h2><div class="cnt" style="margin-bottom:10px">${ans} of ${sr.run.length} answered. Pick up where you left off.</div><button class="p" style="width:100%" id="rsm">Resume test</button><button style="width:100%;margin-top:8px" id="dsc">Discard this test</button></div>`:''}
+  <div class="card"><h2>1. Choose a question pool</h2>
+   <label class="row"><input type="radio" name="p" value="all" checked><div><b>All questions mixed</b><div class="cnt">${D.bank.length} questions</div></div></label>
+   ${D.src.map((s,i)=>`<label class="row"><input type="radio" name="p" value="${i}"><div><b>${esc(s)}</b><div class="cnt">${counts[i]} questions</div></div></label>`).join('')}
+   <label class="row"><input type="radio" name="p" value="missed" id="rm"><div><b>Only questions I missed</b><div class="cnt" id="mc"></div></div></label>
+   <label class="row"><input type="radio" name="p" value="weak" id="rw"><div><b>Practice my weak areas</b><div class="cnt" id="wc"></div></div></label>
+  </div>
+  <div class="card"><h2>2. How many questions?</h2><div class="big" id="n">50</div>
+   <input type="range" id="r" min="1" max="50" value="50">
+   <label class="row" style="margin-top:12px"><input type="checkbox" id="sh" checked><div>Shuffle questions and answer order</div></label>
+   <div class="cnt" id="note"></div></div>
+  <button class="p" style="width:100%" id="go">Start test</button>
+  <button style="width:100%;margin-top:10px" id="imp">My progress &amp; areas to improve</button>
+  <p class="sv" id="sv" style="margin-top:10px;text-align:center"></p>`;
+  setSv();$('#imp').onclick=improve;
+  if(sr){$('#rsm').onclick=resume;const d=$('#dsc');d.onclick=()=>{d.textContent='Tap again to discard';d.onclick=discardRun}}
+  const upd=()=>{const p=document.querySelector('input[name=p]:checked').value;const pool=getPool(p);const r=$('#r');r.max=Math.min(50,Math.max(1,pool.length));if(+r.value>+r.max)r.value=r.max;$('#n').textContent=r.value;$('#note').textContent=pool.length+' in pool';$('#go').disabled=pool.length===0};
+  $('#mc').textContent=missedIds().length+' still marked wrong (saved)';const wt=weakTopics();$('#wc').textContent=wt.length?wt.slice(0,3).map(s=>s.name).join(', ')+(wt.length>3?'…':''):'Answer more questions to find them';
+  document.querySelectorAll('input[name=p]').forEach(e=>e.onchange=()=>{upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value});
+  $('#r').oninput=()=>$('#n').textContent=$('#r').value;
+  upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value;
+  $('#go').onclick=()=>start(document.querySelector('input[name=p]:checked').value,+$('#r').value,$('#sh').checked);
+}
+function getPool(p){if(p==='all')return D.bank;if(p==='missed'){const m=missedIds();return D.bank.filter(q=>m.includes(q.id))}
+  if(p==='weak'){const w=weakTopics().map(s=>s.i);const m=missedIds();return D.bank.filter(q=>w.includes(q.t)||m.includes(q.id))}
+  if(p[0]==='t')return D.bank.filter(q=>q.t===+p.slice(1));return D.bank.filter(q=>q.s===+p)}
+function start(p,n,sh){
+  let pool=getPool(p);pool=sh?shuffle(pool):pool.slice();pool=pool.slice(0,n);
+  st.run=pool.map(q=>{let idx=[0,1,2,3].slice(0,q.o.length);if(sh)idx=shuffle(idx);return{q,idx,pick:null}});
+  st.i=0;saveRun();show();
+}
+function show(){
+  const t=st.run[st.i],q=t.q,n=st.run.length;
+  const ans=t.pick!==null;
+  app.innerHTML=`<div class="top"><span>Question ${st.i+1} of ${n}</span><span>${st.run.filter(x=>x.pick!==null&&x.idx[x.pick]===x.q.a).length} correct</span></div>
+  <div class="bar"><i style="width:${(st.i+(ans?1:0))/n*100}%"></i></div>
+  <div class="card"><div class="q">${esc(q.q)}</div>
+  ${t.idx.map((oi,k)=>{let c='';if(ans){if(oi===q.a)c='ok';else if(k===t.pick)c='bad';else c='dim'}return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${L[k]}.</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
+  ${ans?rat(t)+chatHTML(t):''}
+  <div class="src">${esc(D.src[q.s])} · ${esc(D.top[q.t])}</div></div>
+  <div class="nav"><button id="ex">Save &amp; exit</button><button class="p" id="nx" ${ans?'':'disabled'}>${st.i===n-1?'See results':'Next'}</button></div>`;
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{t.pick=+b.dataset.k;const ok=t.idx[t.pick]===q.a;record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
+  wireChat(t);
+  $('#nx').onclick=()=>{if(st.i===n-1)results();else{st.i++;saveRun();show();window.scrollTo(0,0)}};
+  $('#ex').onclick=()=>{saveRun();home()};
+}
+function rat(t){const ok=t.idx[t.pick]===t.q.a;const cor=t.idx.indexOf(t.q.a);
+  return`<div class="rat ${ok?'ok':'bad'}"><strong>${ok?'Correct':'Incorrect'} — answer: ${L[cor]}</strong>${esc(t.q.r)}</div>`}
+function results(){
+  delete P.run;flush();
+  const done=st.run.filter(x=>x.pick!==null);const ok=done.filter(x=>x.idx[x.pick]===x.q.a).length;const pct=done.length?Math.round(ok/done.length*100):0;
+  const wrong=done.filter(x=>x.idx[x.pick]!==x.q.a);
+  app.innerHTML=`<h1>Results</h1><div class="card"><div class="big">${ok} / ${done.length} (${pct}%)</div>
+  <div class="cnt">${st.run.length-done.length?`${st.run.length-done.length} unanswered`:'All answered'}</div></div>
+  <div class="card"><h2>Missed questions (${wrong.length})</h2>${wrong.length?wrong.map(x=>`<div class="mi"><div><b>${esc(x.q.q)}</b></div><div style="margin-top:6px"><span class="tag b">Your answer</span>${esc(x.q.o[x.idx[x.pick]])}</div><div style="margin-top:4px"><span class="tag">Correct</span>${esc(x.q.o[x.q.a])}</div><div class="rat" style="margin-top:8px">${esc(x.q.r)}</div></div>`).join(''):'<div class="cnt">None — nice work.</div>'}</div>
+  <div class="nav"><button id="h">Home</button><button id="ip">Progress</button><button class="p" id="rt" ${missedIds().length?'':'disabled'}>Retake missed (${missedIds().length})</button></div>`;
+  $('#h').onclick=home;$('#ip').onclick=improve;$('#rt').onclick=()=>start('missed',50,true);
+}
+function improve(){
+  const ts=topicStats(),seenQ=Object.keys(P.a).length,tot=D.bank.length;
+  let n=0,c=0;for(const k in P.a){n+=P.a[k].n;c+=P.a[k].c}
+  const pct=n?Math.round(c/n*100):0,mi=missedIds();
+  const col=p=>p>=80?'var(--ok)':p>=65?'#d9a300':'var(--bad)';
+  const ranked=ts.filter(s=>s.n>0).sort((a,b)=>a.pct-b.pct);
+  const unseen=ts.filter(s=>s.n===0);
+  const worst=D.bank.filter(q=>P.a[q.id]&&P.a[q.id].n-P.a[q.id].c>0).sort((a,b)=>{const x=P.a[a.id],y=P.a[b.id];return (y.n-y.c)-(x.n-x.c)||(x.l-y.l)||y.t-x.t}).slice(0,10);
+  const wt=weakTopics();
+  app.innerHTML=`<h1>My progress</h1><p class="sv" id="sv"></p>
+  ${n?`<div class="stat"><div><b>${pct}%</b><span>overall</span></div><div><b>${n}</b><span>answers</span></div><div><b>${seenQ}/${tot}</b><span>seen</span></div><div><b>${mi.length}</b><span>still wrong</span></div></div>`:'<div class="card"><div class="cnt">No answers yet. Take a test and your results will show up here.</div></div>'}
+  ${wt.length?`<div class="card"><h2>Focus on these first</h2>${wt.slice(0,3).map(s=>`<div class="tr"><div class="h"><b>${esc(s.name)}</b><span class="pill">${Math.round(s.pct)}%</span></div><div class="cnt">${s.c} of ${s.n} correct</div></div>`).join('')}<button class="p" style="width:100%;margin-top:10px" id="pw">Practice weak areas (${getPool('weak').length} questions)</button></div>`:(n?'<div class="card"><h2>Focus areas</h2><div class="cnt">No topic is below 75% yet (a topic needs at least 2 answers to be flagged). Keep going.</div></div>':'')}
+  ${ranked.length?`<div class="card"><h2>All topics, weakest first</h2>${ranked.map(s=>{const p=Math.round(s.pct);return`<div class="tr"><div class="h"><span>${esc(s.name)}</span><span class="pill ${p>=75?'g':''}">${p}%</span></div><div class="mb"><i style="width:${p}%;background:${col(p)}"></i></div><div class="cnt">${s.c}/${s.n} correct · ${s.seen} of ${s.total} questions seen</div><button style="margin-top:6px;padding:6px 10px;font-size:13px" data-t="${s.i}">Drill this topic</button></div>`}).join('')}${unseen.length?`<div class="cnt" style="margin-top:8px">Not started: ${unseen.map(s=>esc(s.name)).join(', ')}</div>`:''}</div>`:''}
+  ${worst.length?`<div class="card"><h2>Most-missed questions</h2>${worst.map(q=>{const o=P.a[q.id];return`<div class="mi"><div><b>${esc(q.q)}</b></div><div class="cnt" style="margin:4px 0">${esc(D.top[q.t])} · missed ${o.n-o.c} of ${o.n}${o.l?' · got it right last time':''}</div><div><span class="tag">Correct</span>${esc(q.o[q.a])}</div><div class="rat" style="margin-top:8px">${esc(q.r)}</div></div>`}).join('')}</div>`:''}
+  <div class="nav"><button id="h">Home</button>${mi.length?`<button class="p" id="rm2">Retake missed (${mi.length})</button>`:''}</div>
+  ${(n||P.run)?'<div style="text-align:center;margin-top:14px"><button id="rs" style="font-size:13px;padding:8px 12px">Clear all my progress</button></div>':''}`;
+  setSv();$('#h').onclick=home;
+  const pw=$('#pw');if(pw)pw.onclick=()=>start('weak',50,true);
+  const rm=$('#rm2');if(rm)rm.onclick=()=>start('missed',50,true);
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>start('t'+b.dataset.t,50,true));
+  const rs=$('#rs');if(rs)rs.onclick=()=>{rs.textContent='Tap again to erase everything (answers, history, unfinished test)';rs.onclick=()=>{P={a:{}};flush();improve()}};
+  window.scrollTo(0,0);
+}
+initStore();
+initSample();
+home();
+
+};

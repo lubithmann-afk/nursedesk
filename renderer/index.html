@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+<title>NurseDesk</title>
+<link rel="stylesheet" href="quiz.css"><link rel="stylesheet" href="app.css">
+</head><body>
+<header id="tabs"><b class="logo">NurseDesk</b>
+ <button data-t="practice" class="on">Practice</button><button data-t="slides">Slides</button><button data-t="ai">Ask AI</button><button data-t="settings">Settings</button>
+</header>
+<main>
+ <section id="pane-practice" class="pane on"><div class="wrap" id="practice"></div></section>
+ <section id="pane-slides" class="pane"><div class="wrap" id="slides"></div></section>
+ <section id="pane-ai" class="pane"><div class="wrap" id="aiw"></div></section>
+ <section id="pane-settings" class="pane"><div class="wrap" id="settings"></div></section>
+</main>
+<script src="../data/questions.js"></script>
+<script src="shim.js"></script>
+<script src="practice.js"></script>
+<script src="slides.js"></script>
+<script src="ai.js"></script>
+<script src="settings.js"></script>
+<script src="boot.js"></script>
+</body></html>
