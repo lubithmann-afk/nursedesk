@@ -5,6 +5,7 @@
 .wrap{max-width:680px;margin:0 auto;padding:16px 14px 80px}
 h1{font-size:22px;margin:8px 0 2px}h2{font-size:18px;margin:0 0 10px}
 .sub{color:var(--mut);margin:0 0 16px;font-size:14px}
+.tabs2{margin-bottom:14px}.tabs2 .tg{display:flex;flex-wrap:wrap;gap:6px}.tabs2 .tl{font-size:12px;color:var(--mut);margin:10px 0 6px;text-transform:uppercase;letter-spacing:.04em}.t2{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit;font-size:13px}.t2.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
 label.row{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
 label.row input{margin-top:4px}

@@ -107,18 +107,28 @@ function corLetters(t){const a=t.q.a;return Array.isArray(a)?t.idx.map((oi,k)=>a
 function corText(q){return Array.isArray(q.a)?q.a.map(i=>q.o[i]).join('; '):q.o[q.a]}
 function pickText(x){return Array.isArray(x.q.a)?(x.pick||[]).map(k=>x.q.o[x.idx[k]]).join('; '):x.q.o[x.idx[x.pick]]}
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+let tab='r';
+const isDeck=s=>/^Class slides/.test(s);
+const shortName=s=>s.replace(/^Class slides\s*[–-]\s*/,'').replace(/^Class slides/,'Imported');
+function tabBar(){
+  const pt=[],dk=[];D.src.forEach((s,i)=>(isDeck(s)?dk:pt).push(i));
+  const b=(k,l)=>`<button class="t2${tab===k?' on':''}" data-tab="${k}">${esc(l)}</button>`;
+  return `<div class="tg">${b('r','Review')}</div><div class="tl">Practice tests</div><div class="tg">${pt.map(i=>b(String(i),D.src[i])).join('')}</div><div class="tl">Class PowerPoints</div><div class="tg">${dk.map(i=>b(String(i),shortName(D.src[i]))).join('')}</div>`;
+}
+function poolRows(){
+  if(tab==='r')return `<label class="row"><input type="radio" name="p" value="all" checked><div><b>All questions mixed</b><div class="cnt">${D.bank.length} questions</div></div></label>
+   <label class="row"><input type="radio" name="p" value="missed" id="rm"><div><b>Only questions I missed</b><div class="cnt" id="mc"></div></div></label>
+   <label class="row"><input type="radio" name="p" value="weak" id="rw"><div><b>Practice my weak areas</b><div class="cnt" id="wc"></div></div></label>`;
+  const i=+tab;return `<label class="row"><input type="radio" name="p" value="${i}" checked><div><b>${esc(D.src[i])}</b><div class="cnt">${D.bank.filter(q=>q.s===i).length} questions</div></div></label>`;
+}
 function home(){
   const counts=D.src.map((_,i)=>D.bank.filter(q=>q.s===i).length);
   const sr=savedRun();const ans=sr?sr.run.filter(x=>x.pick!==null).length:0;
   app.innerHTML=`<h1>NUR 283 Comp Practice Tests</h1>
   <p class="sub">${D.bank.length} questions from your six PDFs, with an NCLEX-style rationale after every answer.</p>
   ${sr?`<div class="card" style="border-color:var(--acc)"><h2>Unfinished test</h2><div class="cnt" style="margin-bottom:10px">${ans} of ${sr.run.length} answered. Pick up where you left off.</div><button class="p" style="width:100%" id="rsm">Resume test</button><button style="width:100%;margin-top:8px" id="dsc">Discard this test</button></div>`:''}
-  <div class="card"><h2>1. Choose a question pool</h2>
-   <label class="row"><input type="radio" name="p" value="all" checked><div><b>All questions mixed</b><div class="cnt">${D.bank.length} questions</div></div></label>
-   ${D.src.map((s,i)=>`<label class="row"><input type="radio" name="p" value="${i}"><div><b>${esc(s)}</b><div class="cnt">${counts[i]} questions</div></div></label>`).join('')}
-   <label class="row"><input type="radio" name="p" value="missed" id="rm"><div><b>Only questions I missed</b><div class="cnt" id="mc"></div></div></label>
-   <label class="row"><input type="radio" name="p" value="weak" id="rw"><div><b>Practice my weak areas</b><div class="cnt" id="wc"></div></div></label>
-  </div>
+  <div class="tabs2">${tabBar()}</div>
+  <div class="card"><h2>1. ${tab==='r'?'Choose a question pool':'Question pool'}</h2>${poolRows()}</div>
   <div class="card"><h2>2. How many questions?</h2><div class="big" id="n">50</div>
    <input type="range" id="r" min="1" max="50" value="50">
    <label class="row" style="margin-top:12px"><input type="checkbox" id="sh" checked><div>Shuffle questions and answer order</div></label>
@@ -129,7 +139,8 @@ function home(){
   setSv();$('#imp').onclick=improve;
   if(sr){$('#rsm').onclick=resume;const d=$('#dsc');d.onclick=()=>{d.textContent='Tap again to discard';d.onclick=discardRun}}
   const upd=()=>{const p=document.querySelector('input[name=p]:checked').value;const pool=getPool(p);const r=$('#r');r.max=Math.min(50,Math.max(1,pool.length));if(+r.value>+r.max)r.value=r.max;$('#n').textContent=r.value;$('#note').textContent=pool.length+' in pool';$('#go').disabled=pool.length===0};
-  $('#mc').textContent=missedIds().length+' still marked wrong (saved)';const wt=weakTopics();$('#wc').textContent=wt.length?wt.slice(0,3).map(s=>s.name).join(', ')+(wt.length>3?'…':''):'Answer more questions to find them';
+  if(tab==='r'){$('#mc').textContent=missedIds().length+' still marked wrong (saved)';const wt=weakTopics();$('#wc').textContent=wt.length?wt.slice(0,3).map(s=>s.name).join(', ')+(wt.length>3?'…':''):'Answer more questions to find them'}
+  document.querySelectorAll('.t2').forEach(e=>e.onclick=()=>{tab=e.dataset.tab;home()});
   document.querySelectorAll('input[name=p]').forEach(e=>e.onchange=()=>{upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value});
   $('#r').oninput=()=>$('#n').textContent=$('#r').value;
   upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value;
