@@ -2,12 +2,14 @@ const { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } = require('ele
 const fs = require('fs'); const path = require('path');
 const { parsePptx } = require('./lib/pptx');
 const { parsePdf } = require('./lib/pdf');
+const { Notes, CATEGORIES } = require('./lib/notes');
 const { Index } = require('./lib/search');
 const { ask, DEFAULT_DOMAINS } = require('./lib/ai');
 
 let win; const idx = new Index();
 const U = () => app.getPath('userData');
 const LIB = () => path.join(U(), 'library');
+let _notes = null; const NOTES = () => _notes || (_notes = new Notes(path.join(U(), 'web_notes.json')));
 const rj = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
 const wj = (f, v) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(v)); };
 
@@ -18,6 +20,7 @@ function decks() { const d = LIB(); if (!fs.existsSync(d)) return []; return fs.
 function reindex() {
   const docs = [];
   decks().forEach(dk => dk.slides.forEach(s => docs.push({ id: dk.id + ':' + s.n, deck: dk.name, deckId: dk.id, n: s.n, title: s.title, body: [...s.text, ...(s.notes.length ? ['Notes: ' + s.notes.join(' ')] : [])].join('\n'), unit: dk.kind === 'pdf' ? 'page' : 'slide' })));
+  try { NOTES().toDocs().forEach(d => docs.push(d)); } catch (e) {}   // saved web notes are searched like any other library text
   idx.build(docs);
 }
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'deck';
@@ -29,7 +32,7 @@ function setKey(k) { const f = path.join(U(), 'key.bin'); if (!k) { try { fs.unl
 ipcMain.handle('lib:list', () => decks().map(d => ({ id: d.id, name: d.name, slides: d.slides.length, kind: d.kind || 'pptx' })));
 ipcMain.handle('lib:deck', (_, id) => { const d = rj(path.join(LIB(), id, 'deck.json')); if (!d) return null; d.dir = path.join(LIB(), id, 'media'); return d; });
 ipcMain.handle('lib:remove', (_, id) => { fs.rmSync(path.join(LIB(), path.basename(id)), { recursive: true, force: true }); reindex(); return true; });
-ipcMain.handle('lib:search', (_, q) => idx.search(q, 25));
+ipcMain.handle('lib:search', (_, q) => idx.search(q, 40).filter(r => r.deckId !== 'notes').slice(0, 25));
 ipcMain.handle('lib:import', async () => {
   const r = await dialog.showOpenDialog(win, { title: 'Import to library', filters: [{ name: 'PowerPoints and PDFs', extensions: ['pptx', 'pdf'] }], properties: ['openFile', 'multiSelections'] });
   const done = [], failed = [];
@@ -59,12 +62,28 @@ ipcMain.handle('set:save', (_, s) => {
   if (Array.isArray(s.domains)) wj(path.join(U(), 'settings.json'), { domains: s.domains.map(x => x.trim()).filter(Boolean) });
   return { hasKey: !!getKey() };
 });
+// The student's actual question: the last user message that is not just the "yes, search" approval.
+const realQuestion = msgs => { const u = (msgs || []).filter(x => x.role === 'user').map(x => String(x.content)); return [...u].reverse().find(t => !/^yes\b.*(go ahead|check|search)/i.test(t)) || u[u.length - 1] || ''; };
 ipcMain.handle('ai:ask', async (e, messages, extra, opts) => {
   try {
-    const r = await ask(messages, { key: getKey(), domains: settings().domains, extraSystem: extra || '', allowWeb: !!(opts && opts.web === true), searchSlides: q => idx.search(q, 6), onStatus: s => e.sender.send('ai:status', s) });
-    return { ok: true, ...r };
+    const web = !!(opts && opts.web === true);
+    const r = await ask(messages, { key: getKey(), domains: settings().domains, extraSystem: extra || '', allowWeb: web, categories: CATEGORIES, searchSlides: q => idx.search(q, 6), onStatus: s => e.sender.send('ai:status', s) });
+    let note = null;
+    if (web && r.usedWeb && r.save && r.sources.length) {          // approved web answer with cited pages -> keep it for next time
+      try {
+        const saved = NOTES().add({ ...r.save, question: realQuestion(messages), sources: r.sources });
+        if (saved) { note = { id: saved.note.id, title: saved.note.title, category: saved.note.category, isNew: saved.isNew }; reindex(); }
+      } catch (err) {}
+    }
+    const { save, ...rest } = r;
+    return { ok: true, ...rest, note };
   } catch (err) { return { ok: false, error: String(err.message || err) }; }
 });
+ipcMain.handle('notes:list', () => NOTES().list());
+ipcMain.handle('notes:categories', () => CATEGORIES);
+ipcMain.handle('notes:delete', (_, id) => { const ok = NOTES().remove(String(id)); reindex(); return ok; });
+ipcMain.handle('notes:setCategory', (_, id, cat) => { const ok = NOTES().setCategory(String(id), cat); reindex(); return ok; });
+ipcMain.handle('notes:clear', () => { NOTES().clear(); reindex(); return true; });
 ipcMain.handle('app:version', () => app.getVersion());
 // ---- updates (manual download + restart from Settings) ----
 let updState = { state: app.isPackaged ? 'idle' : 'dev' };

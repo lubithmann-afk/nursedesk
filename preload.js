@@ -17,5 +17,10 @@ contextBridge.exposeInMainWorld('api', {
   updDownload: () => ipcRenderer.invoke('upd:download'),
   updInstall: () => ipcRenderer.invoke('upd:install'),
   onUpdate: cb => ipcRenderer.on('upd:status', (_, s) => cb(s)),
+  notesList: () => ipcRenderer.invoke('notes:list'),
+  notesCategories: () => ipcRenderer.invoke('notes:categories'),
+  notesDelete: id => ipcRenderer.invoke('notes:delete', id),
+  notesSetCategory: (id, c) => ipcRenderer.invoke('notes:setCategory', id, c),
+  notesClear: () => ipcRenderer.invoke('notes:clear'),
   openExternal: u => ipcRenderer.invoke('open:ext', u),
 });

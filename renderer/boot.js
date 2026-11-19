@@ -3,6 +3,7 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+b.dataset.t));
   if(b.dataset.t==='slides')window.slidesShow&&window.slidesShow();
   if(b.dataset.t==='meds')window.medsShow&&window.medsShow();
+  if(b.dataset.t==='notes')window.notesShow&&window.notesShow();
   if(b.dataset.t==='settings')window.settingsShow&&window.settingsShow();
 });
 const tb=document.getElementById('theme');

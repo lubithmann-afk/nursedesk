@@ -43,3 +43,5 @@ details.mcat>summary .cnt{font-weight:400;margin-left:auto}
 .mq{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card)}.mq .ans{margin-top:6px;color:var(--ok);font-size:14px}
 .mq details{margin-top:6px}.mq summary{cursor:pointer;color:var(--acc);font-size:13px}
 .chip{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut);margin-right:6px}
+
+.mq .src a{color:var(--acc);cursor:pointer;font-size:13px}
