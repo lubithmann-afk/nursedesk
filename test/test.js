@@ -137,7 +137,7 @@ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nd-local-'));
 const zip=new JZ();zip.file('llama-server.exe','x');zip.file('ggml.dll','y');const zbuf=await zip.generateAsync({type:'nodebuffer'});
 const calls2=[];const stream=b=>({ok:true,status:200,headers:{get:()=>String(b.length)},body:(async function*(){yield b})()});
 const fake=async(u,o)=>{calls2.push(String(u));
- if(/releases\/latest/.test(u))return{ok:true,json:async()=>({assets:[{name:'llama-b1-bin-win-cpu-x64.zip',browser_download_url:'https://x/engine.zip'},{name:'other.zip',browser_download_url:'https://x/o.zip'}]})};
+ if(/releases\?per_page/.test(u))return{ok:true,json:async()=>([{tag_name:'b2',assets:[]},{tag_name:'b1',assets:[{name:'llama-b1-bin-win-cpu-x64.zip',browser_download_url:'https://x/engine.zip'},{name:'other.zip',browser_download_url:'https://x/o.zip'}]}])};
  if(/engine\.zip/.test(u))return stream(zbuf);if(/\.gguf/.test(u))return stream(Buffer.from('model'));
  if(/\/health/.test(u))return{ok:true,json:async()=>({})};
  if(/chat\/completions/.test(u)){const b=JSON.parse(o.body);fake.last=b;return{ok:true,json:async()=>({choices:[{message:{content:' Probably X. '}}]})}}
