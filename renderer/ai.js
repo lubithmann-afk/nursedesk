@@ -15,16 +15,32 @@ async function send(text,web){
   text=text.trim();if(!text)return;hist.push({role:'user',content:text});save();draw();
   const inp=document.getElementById('in'),btn=document.getElementById('go2'),st=document.getElementById('st');inp.value='';btn.disabled=true;st.textContent='Thinking…';
   const r=await api.ask(hist.slice(-12).map(m=>({role:m.role,content:m.content})),undefined,{web:web===true});
-  if(r.ok){hist.push({role:'assistant',content:r.text||'(no answer)',sources:r.sources,askWeb:r.askWeb,usedWeb:r.usedWeb,note:r.note});if(r.note&&window.notesRefresh)window.notesRefresh()}else hist.push({role:'assistant',content:'Error: '+r.error});
+  if(r.ok){hist.push({role:'assistant',content:r.text||'(no answer)',sources:r.sources,askWeb:r.askWeb,usedWeb:r.usedWeb,note:r.note});if(r.note&&window.notesRefresh)window.notesRefresh()}else{hist.push({role:'assistant',content:'Error: '+r.error+keyHint(String(r.error))});keyCard()}
   save();st.textContent='';btn.disabled=false;draw();
 }
+async function keyCard(msg){
+  const el=document.getElementById('keycard');if(!el)return;
+  let has=false;try{has=(await api.getSettings()).hasKey}catch(e){}
+  if(has){el.innerHTML=`<details class="card" style="margin-bottom:10px"><summary style="cursor:pointer">How to get or replace your API key</summary>${window.keyHelp.steps().replace('Paste it here and click <b>Save key</b>.','Paste it in <b>Settings</b> and click <b>Save key</b>.')}<button id="kopen2">Open Anthropic Console</button></details>`;
+    const b=document.getElementById('kopen2');if(b)b.onclick=window.keyHelp.open;return}
+  el.innerHTML=`<div class="card" style="margin-bottom:10px;border-color:var(--acc)"><h2 style="margin-top:0">Set up the AI (about 2 minutes)</h2>
+   <p class="sub">The AI needs your own Anthropic API key. Think of it as a password that lets this app ask Claude questions for you.</p>${window.keyHelp.steps()}
+   <div class="row2" style="margin:8px 0 0"><button id="kopen">Open Anthropic Console</button></div>
+   <div class="row2" style="margin:10px 0 0"><input type="password" id="kin" placeholder="Paste your key here (sk-ant-…)"><button class="p" id="ksave">Save key</button></div>
+   <div class="cnt" id="kmsg" style="margin-top:8px">${msg||'Your key is stored encrypted on this PC and only sent to Anthropic. Never share it with anyone.'}</div></div>`;
+  document.getElementById('kopen').onclick=window.keyHelp.open;
+  document.getElementById('ksave').onclick=async()=>{const v=document.getElementById('kin').value.trim();if(!v)return;await api.saveSettings({key:v});
+    window.settingsShow&&document.getElementById('pane-settings').classList.contains('on')&&window.settingsShow();
+    await keyCard();const m=document.getElementById('keycard');if(m&&!/Set up the AI/.test(m.innerHTML))m.insertAdjacentHTML('afterbegin',`<div class="cnt" style="margin-bottom:8px">✔ Key saved.${/^sk-ant-/.test(v)?'':' (Keys usually start with sk-ant-; if the AI says the key is invalid, create a new one.)'} You can ask a question now.</div>`)};
+}
+const keyHint=e=>/No API key/i.test(e)?'\n\nNo key is saved yet. Follow the setup steps at the top of this tab.':/invalid|authentic|x-api-key|permission|unauthor|401|403/i.test(e)?'\n\nThe key was rejected. Check it was copied completely, or create a new key (see “How to get or replace your API key” above).':/credit|balance|billing|payment|quota|rate/i.test(e)?'\n\nYour Anthropic account may be out of credit. Open the Console, go to Billing, and add credits.':'';
 function init(){
-  root().innerHTML=`<div class="cl"><h1 style="margin-top:0">Ask AI</h1><div class="log" id="log"></div><div class="st" id="st"></div>
+  root().innerHTML=`<div class="cl"><h1 style="margin-top:0">Ask AI</h1><div id="keycard"></div><div class="log" id="log"></div><div class="st" id="st"></div>
   <div class="row2"><input type="text" id="in" placeholder="Ask about your class material…"><button class="p" id="go2">Ask</button><button id="clr">Clear</button></div></div>`;
   api.onStatus(s=>{const e=document.getElementById('st');if(e)e.textContent=s});
   document.getElementById('go2').onclick=()=>send(document.getElementById('in').value);
   document.getElementById('in').onkeydown=e=>{if(e.key==='Enter')send(e.target.value)};
-  document.getElementById('clr').onclick=()=>{hist=[];save();draw()};draw();
+  document.getElementById('clr').onclick=()=>{hist=[];save();draw()};draw();keyCard();
 }
 window.aiInit=init;
 })();
