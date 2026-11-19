@@ -187,7 +187,7 @@ function show(){
     if(ans){if(oi===q.a)c='ok';else if(k===t.pick)c='bad';else c='dim'}return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${L[k]}.</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
   ${ans?rat(t)+chatHTML(t):''}
   <div class="src">${esc(sn(q.s))} · ${esc(D.top[q.t])}</div></div>
-  <div class="nav"><button id="ex">Save &amp; exit</button><button class="p" id="nx" ${ans||(multi&&t.sel&&t.sel.length)?'':'disabled'}>${ans?(st.i===n-1?'See results':'Next'):(multi?'Submit answer':'Next')}</button></div>`;
+  <div class="nav"><button id="ex">Save &amp; exit</button>${st.i>0?'<button id="pv">← Previous</button>':''}<button class="p" id="nx" ${ans||(multi&&t.sel&&t.sel.length)?'':'disabled'}>${ans?(st.i===n-1?'See results':'Next'):(multi?'Submit answer':'Next')}</button></div>`;
   document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;
     if(multi){t.sel=t.sel||[];const i=t.sel.indexOf(k);if(i<0)t.sel.push(k);else t.sel.splice(i,1);show();return}
     t.pick=k;const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
@@ -195,6 +195,7 @@ function show(){
   $('#nx').onclick=()=>{if(multi&&!ans){t.pick=(t.sel||[]).slice().sort((a,b)=>a-b);const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});return}
     if(st.i===n-1)results();else{st.i++;saveRun();show();window.scrollTo(0,0)}};
   $('#ex').onclick=()=>{saveRun();home()};
+  const pv=$('#pv');if(pv)pv.onclick=()=>{st.i--;saveRun();show();window.scrollTo(0,0)};   // review only: answered questions stay locked
 }
 function rat(t){const ok=isOk(t);
   return`<div class="rat ${ok?'ok':'bad'}"><strong>${ok?'Correct':'Incorrect'} — answer: ${corLetters(t)}</strong>${esc(t.q.r).replace(/\n/g,'<br>')}</div>`}
