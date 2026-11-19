@@ -15,6 +15,16 @@ function categories(){
 }
 const isRight=(t,k)=>Array.isArray(t.q.a)?t.q.a.includes(t.idx[k]):t.idx[k]===t.q.a;     // is displayed option k a correct one?
 const correctIx=t=>t.idx.map((_,k)=>k).filter(k=>isRight(t,k));
+// Topics ranked by how you have been doing (same rule as Practice: at least 2 answers and under 75% = weak). You choose which to work on.
+function weakPanel(){
+  const h=progress(),D=window.QD,rows=D.top.map((name,i)=>{const qs=D.bank.filter(q=>q.t===i);let n=0,c=0;qs.forEach(q=>{const o=h[q.id];if(o){n+=o.n;c+=o.c}});return{i,name,total:qs.length,n,pct:n?Math.round(c/n*100):null}}).filter(r=>r.total>0);
+  rows.sort((a,b)=>(a.pct==null)-(b.pct==null)||(a.pct??0)-(b.pct??0));
+  const missed=D.bank.filter(q=>h[q.id]&&h[q.id].l===0).length,any=rows.some(r=>r.n>0);
+  return `<div class="cnt" style="margin-bottom:8px">${any?'Lowest scores first. Areas under 75% are ticked for you; change them however you like.':'You have not answered enough questions for me to find weak spots yet. Tick any areas you want to work on.'}</div>
+   ${rows.map(r=>{const weak=r.n>=2&&r.pct<75;return `<label class="row" style="margin:0 0 6px"><input type="checkbox" class="wk" data-t="${r.i}" ${weak?'checked':''}><div style="flex:1"><b>${esc(r.name)}</b> <span class="cnt">${r.total} questions</span></div><span style="font-weight:600;color:var(--${r.pct==null?'mut':r.pct<75?'bad':'ok'})">${r.pct==null?'not tried':r.pct+'%'}</span></label>`}).join('')}
+   ${missed?`<label class="row" style="margin:6px 0 0"><input type="checkbox" id="wkm"><div>Also include the ${missed} question${missed===1?'':'s'} I missed</div></label>`:''}
+   <div class="cnt" id="wkc" style="margin-top:8px"></div>`;
+}
 // ---- setup
 async function setup(){
   C=null;armed=false;if(!window.QD)return;
@@ -22,11 +32,21 @@ async function setup(){
   const groups=[...new Set(cats.map(c=>c.group))];
   app().innerHTML=`<h1>Challenge mode</h1><p class="sub">Random questions from the category you pick. After you answer, your AI coach asks why you chose it and helps you think like an RN on the NCLEX: safety first.</p>
    ${hasKey?'':`<div class="card" style="border-color:var(--bad)"><b>No API key saved yet.</b><div class="cnt" style="margin-top:6px">The AI coach needs your key. You can still play, but you will only see the answer and rationale, with no coaching.</div><button id="chkey" style="margin-top:8px">Set up my key</button></div>`}
-   <div class="card"><h2>1. Choose a category</h2><select id="chc" class="dd">${groups.map(g=>`<optgroup label="${esc(g)}">${cats.filter(c=>c.group===g).map(c=>`<option value="${esc(c.key)}">${esc(c.label)} (${c.own.length})</option>`).join('')}</optgroup>`).join('')}</select><div class="cnt" id="chi" style="margin-top:6px"></div></div>
+   <div class="card"><h2>1. What do you want to practice?</h2>
+   <label class="row" style="margin:0 0 6px"><input type="radio" name="chm" value="cat" checked><div>A category</div></label>
+   <label class="row" style="margin:0 0 10px"><input type="radio" name="chm" value="weak"><div>My weak areas (I choose which)</div></label>
+   <div id="chcat"><select id="chc" class="dd">${groups.map(g=>`<optgroup label="${esc(g)}">${cats.filter(c=>c.group===g).map(c=>`<option value="${esc(c.key)}">${esc(c.label)} (${c.own.length})</option>`).join('')}</optgroup>`).join('')}</select><div class="cnt" id="chi" style="margin-top:6px"></div></div>
+   <div id="chweak" style="display:none">${weakPanel()}</div></div>
    <div class="card"><h2>2. How many questions?</h2><div class="big" id="chn">10</div><input type="range" id="chr" min="1" max="20" value="10"><div class="cnt" style="margin-top:6px">Each question makes two short AI calls: a prompt for your reasoning, then feedback.</div></div>
    <button class="p" style="width:100%" id="chgo">Start challenge</button><button style="width:100%;margin-top:10px" id="chbk">Back to Practice</button>`;
-  const cur=()=>cats.find(c=>c.key===$('#chc').value);
-  const upd=()=>{const n=cur().own.length,r=$('#chr');r.max=Math.max(1,Math.min(20,n));if(+r.value>+r.max)r.value=r.max;$('#chn').textContent=r.value;$('#chi').textContent=`${n} question${n===1?'':'s'} in this category (random order; select-all questions included).`};
+  const mode=()=>document.querySelector('input[name=chm]:checked').value;
+  const weakSet=()=>{const ids=[...document.querySelectorAll('.wk:checked')].map(e=>+e.dataset.t);const seen=new Set(),own=[];
+    window.QD.bank.forEach(q=>{if(ids.includes(q.t)&&!seen.has(q.id)){seen.add(q.id);own.push(q)}});
+    if($('#wkm')&&$('#wkm').checked)(cats.find(c=>c.key==='missed')||{own:[]}).own.forEach(q=>{if(!seen.has(q.id)){seen.add(q.id);own.push(q)}});
+    return{key:'weak',group:'My weak areas',label:'My weak areas: '+(ids.map(t=>window.QD.top[t]).join(', ')||'none chosen'),own}};
+  const cur=()=>mode()==='weak'?weakSet():cats.find(c=>c.key===$('#chc').value);
+  const upd=()=>{const w=mode()==='weak';$('#chcat').style.display=w?'none':'';$('#chweak').style.display=w?'':'none';const n=cur().own.length,r=$('#chr');r.max=Math.max(1,Math.min(20,n));if(+r.value>+r.max)r.value=r.max;$('#chn').textContent=r.value;$('#chi').textContent=`${n} question${n===1?'':'s'} in this category (random order; select-all questions included).`;$('#chgo').disabled=n===0;const wc=$('#wkc');if(wc)wc.textContent=n?`${n} question${n===1?'':'s'} in your chosen areas.`:'Tick at least one area.'};
+  document.querySelectorAll('input[name=chm],.wk,#wkm').forEach(e=>e.onchange=upd);
   $('#chc').onchange=upd;$('#chr').oninput=()=>$('#chn').textContent=$('#chr').value;upd();
   $('#chgo').onclick=()=>start(cur(),+$('#chr').value);
   $('#chbk').onclick=()=>window.practiceHome&&window.practiceHome();
@@ -43,11 +63,11 @@ function draw(){
     if(rev){c=isRight(t,k)?'ok':t.sel.includes(k)?'bad':'dim'}else if(t.sel.includes(k))c='sel';
     return `<button class="opt ${c}" data-k="${k}" ${locked?'disabled':''}><b>${mk}</b><span>${multi?L[k]+'. ':''}${esc(q.o[oi])}</span></button>`}).join('');
   let body='';
-  if(t.stage==='choose')body=`<div class="nav"><button id="chq">${armed?'Tap again to quit':'Quit challenge'}</button><button class="p" id="chlk" ${t.sel.length?'':'disabled'}>Lock in my answer</button></div>`;
+  if(t.stage==='choose')body=`<div class="nav"><button id="chq">${armed?'Tap again to quit':'Quit challenge'}</button>${C.i>0?'<button id="chpv">← Previous</button>':''}<button class="p" id="chlk" ${t.sel.length?'':'disabled'}>Lock in my answer</button></div>`;
   else if(t.stage==='coachwait')body=`<div class="rat"><strong>Your coach</strong>Reading your answer…</div>`;
   else if(t.stage==='explain')body=`<div class="rat"><strong>Your coach</strong>${fmt(t.prompt)}${t.err?`<div class="cnt" style="margin-top:6px">(Coach unavailable: ${esc(t.err)} Using a standard prompt.)</div>`:''}</div>
     <textarea class="f" id="chtx" rows="4" style="width:100%;margin-top:10px" placeholder="Explain your thinking in a few sentences…">${esc(t.text)}</textarea>
-    <div class="nav"><button id="chg">I guessed / I’m not sure</button><button class="p" id="chsub" ${t.text.trim().length>=3?'':'disabled'}>Submit my reasoning</button></div>`;
+    <div class="nav"><button id="chg">I guessed / I’m not sure</button>${C.i>0?'<button id="chpv">← Previous</button>':''}<button class="p" id="chsub" ${t.text.trim().length>=3?'':'disabled'}>Submit my reasoning</button></div>`;
   else if(t.stage==='feedbackwait')body=`<div class="rat"><strong>Your reasoning</strong>${esc(t.guessed&&!t.text.trim()?'(You said you were not sure.)':t.text)}</div><div class="rat"><strong>Your coach</strong>Thinking about your reasoning…</div>`;
   else{const ans=correctIx(t).map(k=>`${L[k]}. ${esc(q.o[t.idx[k]])}`).join('<br>');
     body=`<div class="rat ${t.ok?'ok':'bad'}"><strong>${t.ok?'Correct!':'Not quite.'}</strong>${t.ok?'':'The answer: <br>'+ans}</div>
@@ -58,13 +78,13 @@ function draw(){
     ${(t.chat||[]).map(m=>`<div class="cm ${m.role==='user'?'user':'assistant'}">${m.role==='user'?esc(m.content):fmt(m.content)}</div>`).join('')}${t.fbusy?'<div class="cnt">Your coach is thinking…</div>':''}${t.ferr?`<div class="cnt">${esc(t.ferr)}</div>`:''}
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">${['Why are the other options wrong?','What should I look for next time?','Explain it more simply'].map(x=>`<button class="fuq" data-q="${esc(x)}" ${t.fbusy?'disabled':''}>${esc(x)}</button>`).join('')}</div>
     <div class="row2" style="margin:0"><input type="text" id="chfu" placeholder="Ask your coach about this question…" value="${esc(t.fu||'')}" ${t.fbusy?'disabled':''}><button id="chfs" ${t.fbusy?'disabled':''}>Ask</button></div>
-    <div class="nav"><span></span><button class="p" id="chnx">${C.i===n-1?'See results':'Next question'}</button></div>`}
+    <div class="nav">${C.i>0?'<button id="chpv">← Previous</button>':'<span></span>'}<button class="p" id="chnx">${C.i===n-1?'See results':'Next question'}</button></div>`}
   app().innerHTML=`<div class="top"><span>Challenge · Question ${C.i+1} of ${n}</span><span>${C.qs.filter(x=>x.done&&x.ok).length} correct</span></div>
    <div class="bar"><i style="width:${(C.i+(rev?1:0))/n*100}%"></i></div>
    <div class="card"><div class="q" style="white-space:pre-line">${esc(q.q)}</div>${multi?'<div class="cnt" style="margin:-6px 0 10px">Select all that apply</div>':''}${opts}${body}<div class="src">${esc(window.QD.top[q.t])}</div></div>`;
   app().querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;if(multi){const i=t.sel.indexOf(k);i<0?t.sel.push(k):t.sel.splice(i,1)}else t.sel=[k];draw()});
   const on=(id,fn)=>{const e=$(id);if(e)e.onclick=fn};
-  on('#chlk',()=>lockIn(t));on('#chsub',()=>reason(t,false));on('#chg',()=>reason(t,true));on('#chnx',next);
+  on('#chlk',()=>lockIn(t));on('#chsub',()=>reason(t,false));on('#chg',()=>reason(t,true));on('#chnx',next);on('#chpv',()=>{armed=false;C.i--;draw();window.scrollTo(0,0)});
   on('#chq',()=>{if(armed){armed=false;setup()}else{armed=true;draw()}});
   const fu=$('#chfu');if(fu){fu.oninput=()=>{t.fu=fu.value};fu.onkeydown=e=>{if(e.key==='Enter')followup(t,fu.value)};on('#chfs',()=>followup(t,fu.value));app().querySelectorAll('.fuq').forEach(b=>b.onclick=()=>followup(t,b.dataset.q))}
   const tx=$('#chtx');if(tx){tx.oninput=()=>{t.text=tx.value;const b=$('#chsub');if(b)b.disabled=t.text.trim().length<3};if(!tx.value)tx.focus()}
