@@ -100,5 +100,16 @@ const hid=new Set(GL.fifty(2,new Set(),grng));console.assert(hid.size===2&&!hid.
 const au=GL.audience(2,3,hid,grng);console.assert(au.reduce((a,b)=>a+b)===100&&[...hid].every(i=>au[i]===0),'audience adds to 100 and ignores removed answers');
 const fr=GL.friend(1,0,new Set(),grng);console.assert(fr.pick>=0&&fr.pick<4,'friend picks an answer');
 console.log('game mode tests ran');
+// Glossary: unique terms, valid categories, and every class-material entry cites a real line in a bundled deck.
+const GLD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','glossary.js'),'utf8').replace(/^window\.GLOSSARY=/,'').replace(/;$/,''));
+console.assert(GLD.terms.length>600&&new Set(GLD.terms.map(x=>x.t.toLowerCase())).size===GLD.terms.length,'many glossary terms, none duplicated');
+console.assert(GLD.terms.every(x=>x.d&&x.d.length>=3&&GLD.cats.includes(x.c)),'every term has a definition and a valid category');
+const gnorm=s=>String(s).replace(/’/g,"'").replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
+const gdecks=new Map();for(const f of fs.readdirSync(path.join(__dirname,'..','data','seed'))){const d=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','seed',f,'deck.json'),'utf8'));gdecks.set(d.id,d)}
+const gmat=GLD.terms.filter(x=>x.m);
+console.assert(gmat.length>50&&gmat.every(x=>{const d=gdecks.get(x.m.d);const sl=d&&d.slides.find(s=>s.n===x.m.n);return sl&&sl.text.some(l=>gnorm(l).includes(gnorm(x.m.l).slice(0,60)))}),'every class-material glossary entry cites a real slide or page line');
+console.assert(gmat.every(x=>{const d=gdecks.get(x.m.d);const sl=d.slides.find(s=>s.n===x.m.n);const blob=gnorm(sl.text.join(' ')).toLowerCase();return gnorm(x.d).toLowerCase().replace(/[.)]+$/,'').split(' ').slice(0,4).every(w=>blob.includes(w.replace(/[.,;]/g,'')))}),'class-material definitions come from the cited slide text');
+console.assert(['Aphasia','-itis','Hemiplegia','Goodell sign'].every(k=>GLD.terms.some(x=>x.t.toLowerCase()===k.toLowerCase())),'key terms and word parts are present');
+console.log('glossary tests ran:',GLD.terms.length,'terms,',gmat.length,'from class materials');
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
