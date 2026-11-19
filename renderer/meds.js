@@ -8,9 +8,9 @@ const short=n=>n.replace(/\bGalen\s+(Live Review-RN|System Focused Review)\s*-\s
 let q='',openCats=new Set(),cur=null,scroll=0,view='slides';   // 'slides' = class slides + general reference, 'ati' = the ATI study guide only
 const isAti=x=>/^ati-/.test(x.u);
 const lines=(m,k)=>m.f[k].m.filter(x=>view==='ati'?isAti(x):!isAti(x));
-const pool=()=>{const d=D();return view==='ati'?d.meds.filter(m=>m.a):d.meds.filter(m=>m.g)};   // main tab: found in Galen material (class slides or Galen questions). ATI tab: mentioned in the ATI guide.
+const pool=()=>{const d=D();return view==='ati'?d.meds.filter(m=>m.a):view==='quiz'?d.meds.filter(m=>m.q.length):d.meds.filter(m=>m.g)};   // main tab: found in Galen material (class slides or Galen questions). ATI tab: mentioned in the ATI guide.
 const atiDeck=()=>Object.keys(D().decks).find(k=>/^ati-/.test(k));
-const viewTabs=()=>`<div class="row2" style="margin:0 0 12px"><button class="vt ${view==='slides'?'p':''}" data-v="slides">Class slides &amp; reference</button><button class="vt ${view==='ati'?'p':''}" data-v="ati">ATI study guide</button></div>`;
+const viewTabs=()=>`<div class="row2" style="margin:0 0 12px"><button class="vt ${view==='slides'?'p':''}" data-v="slides">Class slides &amp; reference</button><button class="vt ${view==='quiz'?'p':''}" data-v="quiz">Practice questions</button><button class="vt ${view==='ati'?'p':''}" data-v="ati">ATI study guide</button></div>`;
 const D=()=>window.MEDS;
 function hl(text,names){
   let s=esc(text);if(!names||!names.length)return s;
@@ -18,7 +18,7 @@ function hl(text,names){
   return s.replace(rx,'<mark>$1</mark>');
 }
 function qIds(ms){return[...new Set(ms.flatMap(m=>m.q))]}
-function medRow(m){return `<div class="mrow" data-m="${m.i}"><div><b>${esc(cap(m.name))}</b>${m.brands.length?` <span class="b">(${esc(m.brands.join(', '))})</span>`:''}</div><div class="cnt">${esc(m.cls)}</div></div>`}
+function medRow(m){return `<div class="mrow" data-m="${m.i}"><div><b>${esc(cap(m.name))}</b>${m.brands.length?` <span class="b">(${esc(m.brands.join(', '))})</span>`:''}</div><div class="cnt">${esc(view==='quiz'?m.q.length+' question'+(m.q.length>1?'s':''):m.cls)}</div></div>`}
 function match(m,t){const h=(m.name+' '+m.brands.join(' ')+' '+m.cls+' '+m.cat).toLowerCase();return t.split(/\s+/).every(w=>h.includes(w))}
 function home(){
   const d=D();if(!d){root().innerHTML='<h1>Medications</h1><p class="sub">Medication data is missing from this build.</p>';return}
@@ -35,10 +35,10 @@ function home(){
         ${c.c.map(x=>{const mm=x.m.filter(i=>ok.has(i));return mm.length?`<div class="mcls">${esc(x.n)}</div>${mm.map(i=>medRow(d.meds[i])).join('')}`:''}).join('')}</div></details>`}).join('');
   }
   const n=pool().length;
-  root().innerHTML=`<h1>Medications</h1>${viewTabs()}<p class="sub">${view==='ati'?'Every medication the ATI study guide mentions, with only what that guide says, copied word for word and sorted into the six headings. Medications that appear only in the ATI guide are here and not in the other tab.':'Medications grouped by category. Each one shows its classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions: lines from your class slides first, then a labelled general reference.'}</p>
+  root().innerHTML=`<h1>Medications</h1>${viewTabs()}<p class="sub">${view==='quiz'?'Every medication that comes up in the practice tests, weekly quizzes and the questions inside the class slides. Open one to read each question, its answer and the rationale, or practice just those questions.':view==='ati'?'Every medication the ATI study guide mentions, with only what that guide says, copied word for word and sorted into the six headings. Medications that appear only in the ATI guide are here and not in the other tab.':'Medications grouped by category. Each one shows its classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions: lines from your class slides first, then a labelled general reference.'}</p>
    <div class="mtop"><input type="text" id="mq" placeholder="Search by name, brand, class or category (e.g. Lasix, beta blocker, antidote)" value="${esc(q)}">
    ${view==='ati'&&d.suffix?'<button id="suf">Drug class endings (ATI guide)</button>':''}</div>${body}
-   <p class="cnt" style="margin-top:14px">${n} medication${n===1?'':'s'}${view==='ati'?' mentioned in the ATI study guide.':' that appear in your Galen class slides or practice questions. Medications that only the ATI guide mentions are in the ATI tab.'}</p>`;
+   <p class="cnt" style="margin-top:14px">${n} medication${n===1?'':'s'}${view==='ati'?' mentioned in the ATI study guide.':(view==='quiz'?' that appear in the practice questions.':' that appear in your Galen class slides or practice questions. Medications that only the ATI guide mentions are in the ATI tab.')}</p>`;
   root().querySelectorAll('.vt').forEach(b=>b.onclick=()=>{view=b.dataset.v;home()});
   const mq=document.getElementById('mq');mq.oninput=()=>{q=mq.value;const p=mq.selectionStart;home();const n=document.getElementById('mq');n.focus();n.setSelectionRange(p,p)};
   const suf=document.getElementById('suf');if(suf)suf.onclick=()=>window.gotoSlide(d.suffix.d,d.suffix.n);
@@ -53,7 +53,28 @@ function srcLine(m,x){
   const d=D(),[did,n]=x.u.split(':'),dk=d.decks[did],page=dk.k==='page';
   return `<li class="mf"><span>${hl(x.x,NAMES(m))}</span><span class="src">${esc(page?'ATI guide p. '+n:short(dk.n)+' · slide '+n)} <a data-d="${esc(did)}" data-n="${n}">Open</a></span></li>`;
 }
+const PT=['Comp 1','Comp 2','Comp 3','Comp Bible'];
+const srcName=i=>{const S=(window.QD&&window.QD.src||[])[i]||'';return /^Weekly quiz/.test(S)?S:/^Class slides/.test(S)?S.replace(/^Class slides\s*[–-]\s*/,'Class slide questions – '):(PT[i]||S)};
+function qCard(m,id){
+  const b=(window.QD&&window.QD.bank||[]).find(z=>z.id===id);if(!b)return '';
+  const ans=(Array.isArray(b.a)?b.a:[b.a]).map(i=>b.o[i]).join(' / ');
+  return `<div class="mq"><div class="cnt" style="margin-bottom:4px">${esc(srcName(b.s))}</div><div style="white-space:pre-line">${hl(b.q,NAMES(m))}</div><div class="ans">Answer: ${hl(ans,NAMES(m))}</div><details><summary>Why</summary><div style="margin-top:6px">${hl(b.r||'',NAMES(m)).replace(/\n/g,'<br>')}</div></details></div>`;
+}
+function detailQuiz(i){
+  const d=D(),m=d.meds[i];cur=i;
+  root().innerHTML=`<div class="row2"><button id="bk">← Medications</button></div>${viewTabs()}
+   <h1 style="margin-top:0">${esc(cap(m.name))}</h1>
+   <p class="sub">${m.brands.length?`Also called: ${esc(m.brands.join(', '))}<br>`:''}<span class="chip">${esc(m.cat)}</span><span class="chip">${esc(m.cls)}</span></p>
+   <p class="cnt">${m.q.length?`${m.q.length} practice question${m.q.length>1?'s':''} mention this medication. These are copied word for word from your practice tests, weekly quizzes and class slides.`:'No practice question mentions this medication.'}</p>
+   ${m.q.length?`<button class="p" id="pq" style="margin:6px 0 12px">Practice these ${m.q.length} question${m.q.length>1?'s':''}</button>`:''}
+   ${m.q.map(id=>qCard(m,id)).join('')}`;
+  document.getElementById('bk').onclick=()=>{cur=null;home();document.getElementById('pane-meds').scrollTop=scroll};
+  root().querySelectorAll('.vt').forEach(b=>b.onclick=()=>{view=b.dataset.v;detail(i)});
+  const pq=document.getElementById('pq');if(pq)pq.onclick=()=>practice(m.q);
+  document.getElementById('pane-meds').scrollTop=0;
+}
 function detail(i){
+  if(view==='quiz')return detailQuiz(i);
   const d=D(),m=d.meds[i];cur=i;
   const sec=([k,t])=>{
     const f=m.f[k],L=lines(m,k),ati=view==='ati';
