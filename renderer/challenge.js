@@ -113,14 +113,38 @@ async function followup(t,text){
   t.fbusy=false;draw();const e=$('#chfu');if(e)e.focus();
 }
 function next(){if(C.i===C.qs.length-1)return results();C.i++;draw();window.scrollTo(0,0)}
+// ---- talk to the coach about the whole challenge (results screen)
+let RV=null;
+function reviewItems(qs){return qs.map(t=>({question:t.q.q,options:t.idx.map(oi=>t.q.o[oi]),chosen:t.sel,correct:correctIx(t),ok:!!t.ok,reasoning:t.text,guessed:t.guessed,coach:t.feedback||'',topic:window.QD.top[t.q.t]}))}
+function paintDebrief(){
+  const box=$('#chdbg');if(!box||!RV)return;
+  const chat=RV.chat.map(m=>`<div class="cm ${m.role==='user'?'user':'assistant'}">${m.role==='user'?esc(m.content):fmt(m.content)}</div>`).join('');
+  const started=RV.chat.length>0;
+  box.innerHTML=`<h2 style="margin-top:0">Talk to your coach about this challenge</h2>
+   ${started?'':`<div class="cnt" style="margin-bottom:10px">Your coach will look at all ${RV.qs.length} questions together, point out where your thinking keeps going wrong, and help you fix it. Then you can keep asking questions.</div><button class="p" id="chdb" ${RV.busy?'disabled':''}>Show me where I’m going wrong</button>`}
+   ${chat}${RV.busy?'<div class="cnt">Your coach is reading your answers…</div>':''}${RV.err?`<div class="cnt">${esc(RV.err)}</div>`:''}
+   ${started?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">${['Give me a 5-minute plan to fix this','Which question should I redo first?','Quiz me on my weakest area'].map(x=>`<button class="dbq" data-q="${esc(x)}" ${RV.busy?'disabled':''}>${esc(x)}</button>`).join('')}</div>
+   <div class="row2" style="margin:0"><input type="text" id="chdi" placeholder="Ask your coach anything about how you did…" value="${esc(RV.text)}" ${RV.busy?'disabled':''}><button id="chds" ${RV.busy?'disabled':''}>Send</button></div>`:''}`;
+  const b=$('#chdb');if(b)b.onclick=()=>debrief('');
+  const i=$('#chdi');if(i){i.oninput=()=>{RV.text=i.value};i.onkeydown=e=>{if(e.key==='Enter')debrief(i.value)};const s=$('#chds');if(s)s.onclick=()=>debrief(i.value)}
+  box.querySelectorAll('.dbq').forEach(x=>x.onclick=()=>debrief(x.dataset.q));
+}
+async function debrief(text){
+  if(!RV||RV.busy)return;text=String(text||'').trim();const first=RV.chat.length===0;if(!first&&!text)return;
+  const history=RV.chat.slice();if(!first)RV.chat.push({role:'user',content:text});RV.text='';RV.busy=true;RV.err='';paintDebrief();
+  let r;try{r=await api.coachAsk({stage:'debrief',items:reviewItems(RV.qs),history,ask:first?'':text})}catch(e){r={ok:false,error:String(e)}}
+  if(r&&r.ok&&r.text)RV.chat.push({role:'assistant',content:r.text});else RV.err='Your coach could not answer: '+((r&&r.error)||'no response')+(/No API key/i.test((r&&r.error)||'')?' Add an API key in Settings.':'');
+  RV.busy=false;paintDebrief();const e=$('#chdi');if(e)e.focus();
+}
 function results(){
   const qs=C.qs,ok=qs.filter(x=>x.ok).length,missed=qs.filter(x=>!x.ok).map(x=>x.q.id),label=C.cat.label;
   app().innerHTML=`<h1>Challenge complete</h1><p class="sub">${esc(label)}</p>
    <div class="card"><div class="big">${ok} / ${qs.length}</div><div class="cnt">${ok===qs.length?'Perfect. Keep asking “what is the safest thing to do first?”':ok>=qs.length*0.7?'Solid. Look at the ones you missed and find the safety issue you skipped.':'Good practice. For each miss, ask what could harm this client next, then what the nurse must do first.'}</div></div>
+   <div class="card" id="chdbg"></div>
    ${qs.map((t,i)=>`<div class="card" style="border-left:4px solid var(--${t.ok?'ok':'bad'})"><b>${t.ok?'✔':'✘'} Question ${i+1}</b><div style="white-space:pre-line;margin:4px 0">${esc(t.q.q.length>220?t.q.q.slice(0,217)+'…':t.q.q)}</div>
      <div class="cnt">Your reasoning: ${esc(t.guessed&&!t.text.trim()?'(not sure)':t.text||'(none)')}</div>${t.feedback?`<details><summary style="cursor:pointer">Coach feedback</summary><div class="rat">${fmt(t.feedback)}</div></details>`:''}</div>`).join('')}
    <button class="p" style="width:100%" id="chag">New challenge</button>${missed.length&&window.practiceIds?`<button style="width:100%;margin-top:10px" id="chms">Practice the ${missed.length} I missed (normal mode)</button>`:''}<button style="width:100%;margin-top:10px" id="chhm">Back to Practice</button>`;
-  C=null;const on=(id,fn)=>{const e=$(id);if(e)e.onclick=fn};
+  RV={qs,chat:[],busy:false,err:'',text:''};C=null;paintDebrief();const on=(id,fn)=>{const e=$(id);if(e)e.onclick=fn};
   on('#chag',setup);on('#chms',()=>window.practiceIds(missed));on('#chhm',()=>window.practiceHome&&window.practiceHome());
 }
 window.challengeStart=setup;

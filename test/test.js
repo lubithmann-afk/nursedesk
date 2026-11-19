@@ -123,6 +123,12 @@ const fp=buildPrompt({...cq,stage:'followup',explanation:'ECG first',coachFeedba
 console.assert(fp.messages[0].role==='user'&&fp.messages.every((m,i)=>i===0||m.role!==fp.messages[i-1].role)&&fp.messages[fp.messages.length-1].role==='user','follow-up turns alternate user/assistant and end with the student');
 console.assert(/SECRET-RATIONALE/.test(fp.messages[0].content)&&/what about C\?/.test(fp.messages[fp.messages.length-1].content)&&fp.messages.some(m=>m.role==='assistant'&&/Good start/.test(m.content)),'follow-up includes the key, the coach feedback and the new question');
 console.assert(!/SECRET/.test(buildPrompt({...cq,stage:'bogus',rationale:'SECRET'}).messages[0].content),'an unknown stage is treated as the first prompt: no rationale');
+const dq=(i,ok)=>({question:'Q'+i+' text',options:['a','b','c'],chosen:[0],correct:[ok?0:1],ok,reasoning:'I thought '+i,guessed:false,coach:'fb'+i,topic:'Cardio'});
+const d1=buildPrompt({stage:'debrief',items:[dq(1,true),dq(2,false)]});
+console.assert(d1.messages.length===1&&d1.messages[0].role==='user'&&/1 of 2 correct/.test(d1.messages[0].content)&&/PATTERNS/.test(d1.messages[0].content)&&/Student's reasoning: "I thought 2"/.test(d1.messages[0].content)&&/INCORRECT/.test(d1.messages[0].content),'debrief sees every question, the keys and the student reasoning, and asks for patterns');
+const d2=buildPrompt({stage:'debrief',items:[dq(1,false)],history:[{role:'assistant',content:'Debrief text'}],ask:'what should I fix first?'});
+console.assert(d2.messages.every((m,i)=>i===0||m.role!==d2.messages[i-1].role)&&d2.messages[d2.messages.length-1].role==='user'&&d2.messages[d2.messages.length-1].content==='what should I fix first?'&&d2.messages.some(m=>m.role==='assistant'&&/Debrief text/.test(m.content))&&!/PATTERNS/.test(d2.messages[0].content),'debrief chat alternates turns and ends with the student question');
+console.assert(buildPrompt({stage:'debrief',items:Array.from({length:40},(_,i)=>dq(i,true))}).messages[0].content.split('--- Question').length-1===25,'debrief caps at 25 questions');
 console.log('challenge coach tests ran');
 // Glossary: unique terms, valid categories, and every class-material entry cites a real line in a bundled deck.
 const GLD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','glossary.js'),'utf8').replace(/^window\.GLOSSARY=/,'').replace(/;$/,''));
