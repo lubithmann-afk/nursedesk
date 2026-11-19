@@ -6,6 +6,8 @@ const { Notes, CATEGORIES } = require('./lib/notes');
 const { coach } = require('./lib/coach');
 const { Index } = require('./lib/search');
 const { ask, DEFAULT_DOMAINS } = require('./lib/ai');
+const LOCAL = (() => { let l; return () => l || (l = require('./lib/local').create({ dir: path.join(U(), 'local_ai') })); })();
+const { offlineText } = require('./lib/local');
 
 let win; const idx = new Index();
 const U = () => app.getPath('userData');
@@ -104,6 +106,11 @@ ipcMain.handle('q:import', async () => {
   const keys = new Set(cur.map(q => q.q)); const add = inc.filter(q => q && q.q && Array.isArray(q.o) && Number.isInteger(q.a) && !keys.has(q.q));
   wj(path.join(U(), 'extra_questions.json'), cur.concat(add)); return { added: add.length };
 });
+ipcMain.handle('local:state', () => LOCAL().state());
+ipcMain.handle('local:enable', (_, on, accepted) => { try { return { ok: true, ...LOCAL().setEnabled(!!on, !!accepted) }; } catch (err) { return { ok: false, error: String(err.message || err) }; } });
+ipcMain.handle('local:install', async e => { try { return { ok: true, ...(await LOCAL().install(s => e.sender.send('local:progress', s))) }; } catch (err) { return { ok: false, error: String(err.message || err) }; } });
+ipcMain.handle('local:remove', () => LOCAL().remove());
+app.on('before-quit', () => { try { LOCAL().stop(); } catch (err) {} });
 ipcMain.handle('set:get', () => { const s = settings(); return { domains: s.domains, hasKey: !!getKey() }; });
 ipcMain.handle('set:save', (_, s) => {
   if (typeof s.key === 'string') setKey(s.key.trim());
@@ -114,6 +121,15 @@ ipcMain.handle('set:save', (_, s) => {
 const realQuestion = msgs => { const u = (msgs || []).filter(x => x.role === 'user').map(x => String(x.content)); return [...u].reverse().find(t => !/^yes\b.*(go ahead|check|search)/i.test(t)) || u[u.length - 1] || ''; };
 ipcMain.handle('ai:ask', async (e, messages, extra, opts) => {
   try {
+    if (!getKey()) {                                   // no API key: built-in AI if the student switched it on, else just their own materials
+      const q = realQuestion(messages); let hits = []; try { hits = idx.search(q, 4); } catch (err) {}
+      const L = LOCAL();
+      if (L.state().enabled && L.state().installed) {
+        e.sender.send('ai:status', 'Built-in AI is thinking (this can take a minute)…');
+        return { ok: true, text: await L.chat(messages, hits), sources: [], local: true };
+      }
+      return { ok: true, text: offlineText(q, hits), sources: [], offline: true };
+    }
     const web = !!(opts && opts.web === true);
     const r = await ask(messages, { key: getKey(), domains: settings().domains, extraSystem: extra || '', allowWeb: web, categories: CATEGORIES, searchSlides: q => idx.search(q, 6), onStatus: s => e.sender.send('ai:status', s) });
     let note = null;

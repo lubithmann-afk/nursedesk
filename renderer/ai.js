@@ -11,10 +11,17 @@ function draw(){
   log.querySelectorAll('[data-open-note]').forEach(a=>a.onclick=()=>window.notesOpen&&window.notesOpen(a.dataset.openNote));
   const wb=document.getElementById('webok');if(wb)wb.onclick=()=>send('Yes, go ahead and check the trusted sites.',true);
   log.querySelectorAll('[data-u]').forEach(a=>a.onclick=()=>api.openExternal(a.dataset.u));log.scrollTop=log.scrollHeight}
+function offlineExtras(q){
+  const low=q.toLowerCase(),out=[];
+  try{const M=window.MEDS;if(M)M.meds.filter(m=>[m.name,...m.brands].some(n=>new RegExp('(^|[^a-z])'+n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z]|$)').test(low))).slice(0,2).forEach(m=>out.push(`**${m.name} (Medications tab, ${m.cls})**\nMechanism: ${m.f.moa.m[0]?m.f.moa.m[0].x+' (from your materials)':m.f.moa.g[0]+' (general reference, not from your class materials)'}\nNursing: ${m.f.nsg.m[0]?m.f.nsg.m[0].x+' (from your materials)':m.f.nsg.g[0]+' (general reference, not from your class materials)'}\nOpen the Medications tab for all six sections.`))}catch(e){}
+  try{const G=window.GLOSSARY;if(G)G.terms.filter(t=>t.t.length>3&&new RegExp('(^|[^a-z])'+t.t.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z]|$)').test(low)).slice(0,3).forEach(t=>out.push(`**${t.t}** (glossary${t.m?', from your class materials':', general definition'}): ${t.d}`))}catch(e){}
+  return out.length?'\n\n---\nAlso in this app:\n\n'+out.join('\n\n'):'';
+}
 async function send(text,web){
   text=text.trim();if(!text)return;hist.push({role:'user',content:text});save();draw();
   const inp=document.getElementById('in'),btn=document.getElementById('go2'),st=document.getElementById('st');inp.value='';btn.disabled=true;st.textContent='Thinking…';
   const r=await api.ask(hist.slice(-12).map(m=>({role:m.role,content:m.content})),undefined,{web:web===true});
+  if(r.ok&&r.offline)r.text+=offlineExtras(text);
   if(r.ok){hist.push({role:'assistant',content:r.text||'(no answer)',sources:r.sources,askWeb:r.askWeb,usedWeb:r.usedWeb,note:r.note});if(r.note&&window.notesRefresh)window.notesRefresh()}else{hist.push({role:'assistant',content:'Error: '+r.error+keyHint(String(r.error))});keyCard()}
   save();st.textContent='';btn.disabled=false;draw();
 }

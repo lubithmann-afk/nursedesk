@@ -25,5 +25,10 @@ contextBridge.exposeInMainWorld('api', {
   notesClear: () => ipcRenderer.invoke('notes:clear'),
   openOriginal: id => ipcRenderer.invoke('orig:open', id),
   linkOriginals: () => ipcRenderer.invoke('orig:linkFolder'),
+  localState: () => ipcRenderer.invoke('local:state'),
+  localEnable: (on, ok) => ipcRenderer.invoke('local:enable', on, ok),
+  localInstall: () => ipcRenderer.invoke('local:install'),
+  localRemove: () => ipcRenderer.invoke('local:remove'),
+  onLocalProgress: cb => ipcRenderer.on('local:progress', (_, s) => cb(s)),
   openExternal: u => ipcRenderer.invoke('open:ext', u),
 });

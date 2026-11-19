@@ -25,7 +25,7 @@ const res=await ai.ask([{role:'user',content:'antidote for warfarin?'}],{key:'k'
 console.assert(/Vitamin K/.test(res.text),'ai text');// No approval: the web tool is not even offered, the AI is told to ask first, and the ask-token is turned into a flag.
 let c2=0;global.fetch=async(u,o)=>{c2++;const b=JSON.parse(o.body);
  console.assert(!b.tools.some(t=>t.name==='web_search'),'web_search must NOT be offered without approval');
- console.assert(/do NOT answer from memory/.test(b.system)&&/\[\[ASK_WEB\]\]/.test(b.system),'prompt tells it to ask first');
+ console.assert(/My own thoughts \(not from your materials/.test(b.system)&&/never search the web or imply you did/i.test(b.system)&&/\[\[ASK_WEB\]\]/.test(b.system),'prompt tells it to ask first');
  return{ok:true,json:async()=>({stop_reason:'end_turn',content:[{type:'text',text:'Your library does not cover this. Want me to check trusted sites?\n[[ASK_WEB]]'}]})}};
 const r2=await ai.ask([{role:'user',content:'something not in the library'}],{key:'k',domains:ai.DEFAULT_DOMAINS,searchSlides:()=>[]});
 console.assert(r2.askWeb===true&&!/ASK_WEB/.test(r2.text)&&r2.usedWeb===false,'ask flag set, token stripped');
@@ -131,5 +131,31 @@ console.assert(gmat.length>50&&gmat.every(x=>{const d=gdecks.get(x.m.d);const sl
 console.assert(gmat.every(x=>{const d=gdecks.get(x.m.d);const sl=d.slides.find(s=>s.n===x.m.n);const blob=gnorm(sl.text.join(' ')).toLowerCase();return gnorm(x.d).toLowerCase().replace(/[.)]+$/,'').split(' ').slice(0,4).every(w=>blob.includes(w.replace(/[.,;]/g,'')))}),'class-material definitions come from the cited slide text');
 console.assert(['Aphasia','-itis','Hemiplegia','Goodell sign'].every(k=>GLD.terms.some(x=>x.t.toLowerCase()===k.toLowerCase())),'key terms and word parts are present');
 console.log('glossary tests ran:',GLD.terms.length,'terms,',gmat.length,'from class materials');
+// Built-in AI (optional): off until the disclaimer is accepted; installs from downloads; labels every answer; offline fallback quotes materials.
+{const LC=require('../lib/local'),JZ=require('jszip'),os=require('os');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nd-local-'));
+const zip=new JZ();zip.file('llama-server.exe','x');zip.file('ggml.dll','y');const zbuf=await zip.generateAsync({type:'nodebuffer'});
+const calls2=[];const stream=b=>({ok:true,status:200,headers:{get:()=>String(b.length)},body:(async function*(){yield b})()});
+const fake=async(u,o)=>{calls2.push(String(u));
+ if(/releases\/latest/.test(u))return{ok:true,json:async()=>({assets:[{name:'llama-b1-bin-win-cpu-x64.zip',browser_download_url:'https://x/engine.zip'},{name:'other.zip',browser_download_url:'https://x/o.zip'}]})};
+ if(/engine\.zip/.test(u))return stream(zbuf);if(/\.gguf/.test(u))return stream(Buffer.from('model'));
+ if(/\/health/.test(u))return{ok:true,json:async()=>({})};
+ if(/chat\/completions/.test(u)){const b=JSON.parse(o.body);fake.last=b;return{ok:true,json:async()=>({choices:[{message:{content:' Probably X. '}}]})}}
+ return{ok:false,status:404,json:async()=>({})}};
+const sp=()=>({on(){},kill(){}});
+const L=LC.create({dir,fetchFn:fake,platform:'win32',spawnFn:sp});
+console.assert(L.state().enabled===false&&L.state().installed===false,'built-in AI is off by default');
+let e1='';try{L.setEnabled(true,false)}catch(e){e1=e.message}console.assert(/disclaimer/.test(e1),'cannot switch on without accepting the disclaimer');
+const prog=[];await L.install(s=>prog.push(s));
+console.assert(L.state().installed&&fs.existsSync(path.join(dir,'bin','llama-server.exe'))&&calls2.some(u=>/\.gguf/.test(u)),'engine and model download and unpack');
+L.setEnabled(true,true);console.assert(L.state().enabled,'switched on after accepting');
+const ans=await L.chat([{role:'user',content:'What is digoxin toxicity?'}],[{deck:'Unit 8',unit:'slide',n:36,title:'Lanoxin',body:'x\nVisual halos'}]);
+console.assert(ans.startsWith(LC.LABEL)&&/Probably X\./.test(ans),'every built-in answer is labelled as its own thoughts');
+const um=fake.last.messages;console.assert(um[0].role==='system'&&/Unit 8, slide 36/.test(um[um.length-1].content)&&/digoxin toxicity/.test(um[um.length-1].content),'question and excerpts reach the model');
+const off=LC.offlineText('q',[{deck:'Unit 8',unit:'slide',n:36,title:'Lanoxin',body:'x\nVisual halos'}]);console.assert(/word-for-word/.test(off)&&/Unit 8, slide 36/.test(off),'offline fallback quotes the library with citations');
+console.assert(/nothing in your library/.test(LC.offlineText('q',[])),'offline fallback says when nothing matched');
+console.assert(LC.create({dir:fs.mkdtempSync(path.join(os.tmpdir(),'nd-l2-')),fetchFn:fake,platform:'linux'}).state().supported===false,'only supported on Windows');
+L.remove();console.assert(!L.state().installed&&!L.state().enabled,'delete removes the download and switches off');
+console.log('built-in AI tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
