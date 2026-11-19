@@ -6,7 +6,7 @@ const { Notes, CATEGORIES } = require('./lib/notes');
 const { coach } = require('./lib/coach');
 const { Index } = require('./lib/search');
 const { ask, DEFAULT_DOMAINS } = require('./lib/ai');
-const LOCAL = (() => { let l; return () => l || (l = require('./lib/local').create({ dir: path.join(U(), 'local_ai') })); })();
+const LOCAL = (() => { let l; return () => l || (l = require('./lib/local').create({ dir: path.join(U(), 'local_ai'), netFetch: (u, o) => require('electron').net.fetch(u, o) })); })();
 const { offlineText } = require('./lib/local');
 
 let win; const idx = new Index();

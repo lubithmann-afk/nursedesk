@@ -155,6 +155,9 @@ const um=fake.last.messages;console.assert(um[0].role==='system'&&/Unit 8, slide
 const off=LC.offlineText('q',[{deck:'Unit 8',unit:'slide',n:36,title:'Lanoxin',body:'x\nVisual halos'}]);console.assert(/word-for-word/.test(off)&&/Unit 8, slide 36/.test(off),'offline fallback quotes the library with citations');
 console.assert(/nothing in your library/.test(LC.offlineText('q',[])),'offline fallback says when nothing matched');
 console.assert(LC.create({dir:fs.mkdtempSync(path.join(os.tmpdir(),'nd-l2-')),fetchFn:fake,platform:'linux'}).state().supported===false,'only supported on Windows');
+const bad=async()=>{throw Object.assign(new TypeError('fetch failed'),{cause:{code:'ENOTFOUND'}})};
+let ne='';try{await LC.create({dir:fs.mkdtempSync(path.join(os.tmpdir(),'nd-l3-')),fetchFn:fake,netFetch:bad,platform:'win32'}).install()}catch(e){ne=e.message}
+console.assert(/api\.github\.com/.test(ne)&&/ENOTFOUND/.test(ne),'network failures name the site and the cause, not just "fetch failed"');
 L.remove();console.assert(!L.state().installed&&!L.state().enabled,'delete removes the download and switches off');
 console.log('built-in AI tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
