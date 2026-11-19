@@ -3,6 +3,7 @@ const fs = require('fs'); const path = require('path');
 const { parsePptx } = require('./lib/pptx');
 const { parsePdf } = require('./lib/pdf');
 const { Notes, CATEGORIES } = require('./lib/notes');
+const { coach } = require('./lib/coach');
 const { Index } = require('./lib/search');
 const { ask, DEFAULT_DOMAINS } = require('./lib/ai');
 
@@ -125,6 +126,10 @@ ipcMain.handle('ai:ask', async (e, messages, extra, opts) => {
     const { save, ...rest } = r;
     return { ok: true, ...rest, note };
   } catch (err) { return { ok: false, error: String(err.message || err) }; }
+});
+ipcMain.handle('coach:ask', async (e, payload) => {            // challenge mode: prompt for, then coach, the student's reasoning
+  try { return { ok: true, text: await coach(payload, { key: getKey() }) }; }
+  catch (err) { return { ok: false, error: String(err.message || err) }; }
 });
 ipcMain.handle('notes:list', () => NOTES().list());
 ipcMain.handle('notes:categories', () => CATEGORIES);

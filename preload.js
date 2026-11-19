@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('api', {
   updDownload: () => ipcRenderer.invoke('upd:download'),
   updInstall: () => ipcRenderer.invoke('upd:install'),
   onUpdate: cb => ipcRenderer.on('upd:status', (_, s) => cb(s)),
+  coachAsk: payload => ipcRenderer.invoke('coach:ask', payload),
   notesList: () => ipcRenderer.invoke('notes:list'),
   notesCategories: () => ipcRenderer.invoke('notes:categories'),
   notesDelete: id => ipcRenderer.invoke('notes:delete', id),
