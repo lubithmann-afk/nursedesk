@@ -5,7 +5,7 @@
 .wrap{max-width:680px;margin:0 auto;padding:16px 14px 80px}
 h1{font-size:22px;margin:8px 0 2px}h2{font-size:18px;margin:0 0 10px}
 .sub{color:var(--mut);margin:0 0 16px;font-size:14px}
-select.dd{display:block;width:100%;margin-top:6px;font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+span.dn{font-size:13px;font-weight:600;margin-left:6px}select.dd{display:block;width:100%;margin-top:6px;font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
 label.row{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
 label.row input{margin-top:4px}
