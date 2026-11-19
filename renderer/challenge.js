@@ -54,6 +54,10 @@ function draw(){
     <div class="rat"><strong>Your reasoning</strong>${esc(t.guessed&&!t.text.trim()?'(You said you were not sure.)':t.text)}</div>
     ${t.feedback?`<div class="rat"><strong>Your coach</strong>${fmt(t.feedback)}</div>`:`<div class="rat"><strong>Coach unavailable</strong>${esc(t.err||'No feedback this time.')}</div>`}
     <details style="margin-top:10px" ${t.feedback?'':'open'}><summary style="cursor:pointer">Rationale from the question bank</summary><div class="rat" style="white-space:pre-line">${esc(q.r||'')}</div></details>
+    <h3 style="margin:16px 0 6px;font-size:14px">Ask a follow-up question</h3>
+    ${(t.chat||[]).map(m=>`<div class="cm ${m.role==='user'?'user':'assistant'}">${m.role==='user'?esc(m.content):fmt(m.content)}</div>`).join('')}${t.fbusy?'<div class="cnt">Your coach is thinking…</div>':''}${t.ferr?`<div class="cnt">${esc(t.ferr)}</div>`:''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">${['Why are the other options wrong?','What should I look for next time?','Explain it more simply'].map(x=>`<button class="fuq" data-q="${esc(x)}" ${t.fbusy?'disabled':''}>${esc(x)}</button>`).join('')}</div>
+    <div class="row2" style="margin:0"><input type="text" id="chfu" placeholder="Ask your coach about this question…" value="${esc(t.fu||'')}" ${t.fbusy?'disabled':''}><button id="chfs" ${t.fbusy?'disabled':''}>Ask</button></div>
     <div class="nav"><span></span><button class="p" id="chnx">${C.i===n-1?'See results':'Next question'}</button></div>`}
   app().innerHTML=`<div class="top"><span>Challenge · Question ${C.i+1} of ${n}</span><span>${C.qs.filter(x=>x.done&&x.ok).length} correct</span></div>
    <div class="bar"><i style="width:${(C.i+(rev?1:0))/n*100}%"></i></div>
@@ -62,6 +66,7 @@ function draw(){
   const on=(id,fn)=>{const e=$(id);if(e)e.onclick=fn};
   on('#chlk',()=>lockIn(t));on('#chsub',()=>reason(t,false));on('#chg',()=>reason(t,true));on('#chnx',next);
   on('#chq',()=>{if(armed){armed=false;setup()}else{armed=true;draw()}});
+  const fu=$('#chfu');if(fu){fu.oninput=()=>{t.fu=fu.value};fu.onkeydown=e=>{if(e.key==='Enter')followup(t,fu.value)};on('#chfs',()=>followup(t,fu.value));app().querySelectorAll('.fuq').forEach(b=>b.onclick=()=>followup(t,b.dataset.q))}
   const tx=$('#chtx');if(tx){tx.oninput=()=>{t.text=tx.value;const b=$('#chsub');if(b)b.disabled=t.text.trim().length<3};if(!tx.value)tx.focus()}
 }
 const payload=(t,stage)=>({stage,question:t.q.q,options:t.idx.map(oi=>t.q.o[oi]),chosen:t.sel,
@@ -79,6 +84,13 @@ async function reason(t,guessed){
   const want=correctIx(t);t.ok=want.length===t.sel.length&&want.every(k=>t.sel.includes(k));t.done=true;t.stage='reveal';
   try{window.recordAnswer&&window.recordAnswer(t.q.id,t.ok)}catch(e){}
   draw();
+}
+async function followup(t,text){
+  text=String(text||'').trim();if(!text||t.fbusy)return;
+  t.chat=t.chat||[];const history=t.chat.slice();t.chat.push({role:'user',content:text});t.fu='';t.fbusy=true;t.ferr='';draw();
+  let r;try{r=await api.coachAsk({...payload(t,'feedback'),stage:'followup',coachFeedback:t.feedback,history,ask:text})}catch(e){r={ok:false,error:String(e)}}
+  if(r&&r.ok&&r.text)t.chat.push({role:'assistant',content:r.text});else t.ferr='Your coach could not answer: '+((r&&r.error)||'no response')+(/No API key/i.test((r&&r.error)||'')?' Add an API key in Settings.':'');
+  t.fbusy=false;draw();const e=$('#chfu');if(e)e.focus();
 }
 function next(){if(C.i===C.qs.length-1)return results();C.i++;draw();window.scrollTo(0,0)}
 function results(){
