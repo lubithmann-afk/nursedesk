@@ -49,6 +49,8 @@ const dg=MD.meds.find(m=>m.name==='digoxin');
 console.assert(dg.f.labs.m.some(x=>/0\.5-2 ng/.test(x.x))||dg.f.labs.g.some(x=>/0\.5-2/.test(x)),'digoxin level present');
 console.assert(MD.meds.every(m=>m.q.every(id=>qids.has(id))),'every question link resolves');
 console.assert(MD.cats.flatMap(c=>c.c.flatMap(x=>x.m)).length===MD.meds.length,'every medication is in a category');
+console.assert(MD.meds.every(m=>(m.g||m.a)&&Array.isArray(m.ap)),'every medication is flagged as found in Galen material and/or the ATI guide');
+console.assert(MD.meds.every(m=>!m.f.cls.m.concat(m.f.moa.m,m.f.adm.m,m.f.se.m,m.f.labs.m,m.f.nsg.m).some(x=>/^ati-/.test(x.u))||m.a),'ATI lines only on medications flagged as in the ATI guide');
 console.log('medication data checks ran:',MD.meds.length,'medications');
 // Saved web notes: store rules, the SAVE block (honoured only after web approval), cited pages with quotes, and reuse by search.
 const {Notes,CATEGORIES}=require('../lib/notes');

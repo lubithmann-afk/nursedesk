@@ -8,8 +8,8 @@ const short=n=>n.replace(/\bGalen\s+(Live Review-RN|System Focused Review)\s*-\s
 let q='',openCats=new Set(),cur=null,scroll=0,view='slides';   // 'slides' = class slides + general reference, 'ati' = the ATI study guide only
 const isAti=x=>/^ati-/.test(x.u);
 const lines=(m,k)=>m.f[k].m.filter(x=>view==='ati'?isAti(x):!isAti(x));
-const hasAti=m=>Object.values(m.f).some(f=>f.m.some(isAti));
-const pool=()=>{const d=D();return view==='ati'?d.meds.filter(hasAti):d.meds};
+const pool=()=>{const d=D();return view==='ati'?d.meds.filter(m=>m.a):d.meds.filter(m=>m.g)};   // main tab: found in Galen material (class slides or Galen questions). ATI tab: mentioned in the ATI guide.
+const atiDeck=()=>Object.keys(D().decks).find(k=>/^ati-/.test(k));
 const viewTabs=()=>`<div class="row2" style="margin:0 0 12px"><button class="vt ${view==='slides'?'p':''}" data-v="slides">Class slides &amp; reference</button><button class="vt ${view==='ati'?'p':''}" data-v="ati">ATI study guide</button></div>`;
 const D=()=>window.MEDS;
 function hl(text,names){
@@ -35,10 +35,10 @@ function home(){
         ${c.c.map(x=>{const mm=x.m.filter(i=>ok.has(i));return mm.length?`<div class="mcls">${esc(x.n)}</div>${mm.map(i=>medRow(d.meds[i])).join('')}`:''}).join('')}</div></details>`}).join('');
   }
   const n=pool().length;
-  root().innerHTML=`<h1>Medications</h1>${viewTabs()}<p class="sub">${view==='ati'?'Only what the ATI study guide says about each medication, copied word for word and sorted into the six headings. Open one to see it, with a link to the page.':'Medications grouped by category. Each one shows its classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions: lines from your class slides first, then a labelled general reference.'}</p>
+  root().innerHTML=`<h1>Medications</h1>${viewTabs()}<p class="sub">${view==='ati'?'Every medication the ATI study guide mentions, with only what that guide says, copied word for word and sorted into the six headings. Medications that appear only in the ATI guide are here and not in the other tab.':'Medications grouped by category. Each one shows its classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions: lines from your class slides first, then a labelled general reference.'}</p>
    <div class="mtop"><input type="text" id="mq" placeholder="Search by name, brand, class or category (e.g. Lasix, beta blocker, antidote)" value="${esc(q)}">
    ${view==='ati'&&d.suffix?'<button id="suf">Drug class endings (ATI guide)</button>':''}</div>${body}
-   <p class="cnt" style="margin-top:14px">${n} medication${n===1?'':'s'}${view==='ati'?' mentioned in the ATI study guide.':'. Class-slide lines come from the bundled class slides; the ATI guide has its own tab above.'}</p>`;
+   <p class="cnt" style="margin-top:14px">${n} medication${n===1?'':'s'}${view==='ati'?' mentioned in the ATI study guide.':' that appear in your Galen class slides or practice questions. Medications that only the ATI guide mentions are in the ATI tab.'}</p>`;
   root().querySelectorAll('.vt').forEach(b=>b.onclick=()=>{view=b.dataset.v;home()});
   const mq=document.getElementById('mq');mq.oninput=()=>{q=mq.value;const p=mq.selectionStart;home();const n=document.getElementById('mq');n.focus();n.setSelectionRange(p,p)};
   const suf=document.getElementById('suf');if(suf)suf.onclick=()=>window.gotoSlide(d.suffix.d,d.suffix.n);
@@ -65,6 +65,7 @@ function detail(i){
    <h1 style="margin-top:0">${esc(cap(m.name))}</h1>
    <p class="sub">${m.brands.length?`Also called: ${esc(m.brands.join(', '))}<br>`:''}<span class="chip">${esc(m.cat)}</span><span class="chip">${esc(m.cls)}</span></p>
    <p class="cnt">${view==='ati'?'Everything below is copied word for word from the ATI study guide; tap Open to see the page. Nothing here is my own summary. Always check your course drug guide or the provider’s order for doses and parameters.':'Lines under “From your class slides” are copied word for word from your slides; tap Open to see them in place. The general reference fills gaps with standard teaching and has no doses. The ATI guide has its own tab above. Always check your course drug guide or the provider’s order for doses and parameters.'}</p>
+   ${view==='ati'&&m.ap&&m.ap.length&&atiDeck()?`<div class="mfh">Pages of the ATI study guide that mention it</div><div class="row2" style="margin:0 0 6px">${m.ap.map(n=>`<a class="atp" data-n="${n}" style="color:var(--acc);cursor:pointer">p. ${n}</a>`).join(' · ')}</div>`:''}
    ${FIELDS.map(sec).join('')}
    <div class="row2" style="margin-top:14px"><span class="cnt">Study this drug with your own account:</span><button id="hgpt">Ask ChatGPT</button><button id="hcl">Ask Claude</button></div><div class="cnt" id="hmsg"></div>
    ${m.q.length&&view!=='ati'?`<button class="p" id="pq" style="margin-top:16px">Practice ${m.q.length} question${m.q.length>1?'s':''} on this medication</button>`:''}`;
@@ -75,6 +76,7 @@ function detail(i){
     document.getElementById('hmsg').textContent=await window.handoff.send(site,window.handoff.prompt(`Teach me ${cap(m.name)} (${m.cls}): classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions, then quiz me with 3 NCLEX-style questions.`,ex))};
   const pq=document.getElementById('pq');if(pq)pq.onclick=()=>practice(m.q);
   root().querySelectorAll('.mf a').forEach(a=>a.onclick=()=>window.gotoSlide(a.dataset.d,+a.dataset.n));
+  root().querySelectorAll('.atp').forEach(a=>a.onclick=()=>window.gotoSlide(atiDeck(),+a.dataset.n));
   document.getElementById('pane-meds').scrollTop=0;
 }
 window.medsInit=()=>home();window.medsShow=()=>{};
