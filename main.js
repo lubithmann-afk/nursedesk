@@ -5,7 +5,9 @@ const { parsePdf } = require('./lib/pdf');
 const { Notes, CATEGORIES } = require('./lib/notes');
 const { coach } = require('./lib/coach');
 const { Index } = require('./lib/search');
-const { ask, DEFAULT_DOMAINS } = require('./lib/ai');
+const { ask, DEFAULT_DOMAINS, checkKey, setUsageHook } = require('./lib/ai');
+const { Usage } = require('./lib/usage');
+let _usage = null; const USAGE = () => _usage || (_usage = new Usage(path.join(U(), 'usage.json')));
 const LOCAL = (() => { let l; return () => l || (l = require('./lib/local').create({ dir: path.join(U(), 'local_ai'), netFetch: (u, o) => require('electron').net.fetch(u, o) })); })();
 const { offlineText } = require('./lib/local');
 
@@ -116,6 +118,10 @@ ipcMain.handle('local:importModel', async () => {
 });
 ipcMain.handle('local:remove', () => LOCAL().remove());
 app.on('before-quit', () => { try { LOCAL().stop(); } catch (err) {} });
+setUsageHook(u => USAGE().add(u));
+ipcMain.handle('key:check', () => checkKey(getKey()));
+ipcMain.handle('usage:get', () => USAGE().summary());
+ipcMain.handle('usage:set', (_, o) => { o = o || {}; if ('inP' in o || 'outP' in o) USAGE().setPrices(o.inP, o.outP); if ('credit' in o) USAGE().setCredit(o.credit); return USAGE().summary(); });
 ipcMain.handle('set:get', () => { const s = settings(); return { domains: s.domains, hasKey: !!getKey() }; });
 ipcMain.handle('set:save', (_, s) => {
   if (typeof s.key === 'string') setKey(s.key.trim());
