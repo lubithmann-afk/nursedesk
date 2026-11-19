@@ -30,9 +30,16 @@ async function paintLocal(note){
   if(!s.accepted||!s.installed){
     e.innerHTML=`<p class="sub">Lets the Ask AI tab answer when you have no API key, by running a small model on this PC. Without it (and without a key), Ask AI just shows the matching lines from your own materials.</p>${dis}
      <label class="row" style="margin:8px 0"><input type="checkbox" id="lacc" ${s.accepted?'checked':''}><div>I understand the built-in AI can be wrong and is not a substitute for my course materials.</div></label>
-     <button class="p" id="linst" ${s.accepted?'':'disabled'}>Download and switch on</button> <span class="cnt" id="lmsg">${note||''}</span>`;
+     <button class="p" id="linst" ${s.accepted?'':'disabled'}>Download and switch on</button> <span class="cnt" id="lmsg">${esc(note||'')}</span>
+     <details style="margin-top:12px" ${note?'open':''}><summary style="cursor:pointer">Download is blocked on my network? Get the model in my web browser instead</summary>
+      <ol style="margin:8px 0 0 18px"><li><button id="lbr">Open the model download in my browser</button> (about ${(s.mb/1000).toFixed(1)} GB; save it anywhere, for example Downloads)</li><li><button id="lfile">I downloaded it, choose the file…</button></li></ol></details>`;
     const acc=document.getElementById('lacc'),bt=document.getElementById('linst');
     acc.onchange=()=>{bt.disabled=!acc.checked};
+    document.getElementById('lbr').onclick=()=>api.openExternal(s.modelUrl);
+    document.getElementById('lfile').onclick=async()=>{if(!acc.checked){document.getElementById('lmsg').textContent='Tick the box above first.';return}
+      const m=document.getElementById('lmsg');const r=await api.localImportModel();if(r.cancelled)return;if(!r.ok){paintLocal(r.error);return}
+      m.textContent='Model added. Setting up the AI engine…';api.onLocalProgress(t=>{m.textContent=t});await api.localEnable(true,true);
+      const i=await api.localInstall();if(!i.ok){paintLocal('Could not finish: '+i.error);return}await api.localEnable(true,true);paintLocal('Installed and switched on.')};
     bt.onclick=async()=>{bt.disabled=true;acc.disabled=true;const m=document.getElementById('lmsg');api.onLocalProgress(t=>{m.textContent=t});
       const r=await api.localEnable(true,true);if(!r.ok){paintLocal(r.error);return}
       const i=await api.localInstall();if(!i.ok){paintLocal('Could not finish: '+i.error);return}

@@ -109,6 +109,11 @@ ipcMain.handle('q:import', async () => {
 ipcMain.handle('local:state', () => LOCAL().state());
 ipcMain.handle('local:enable', (_, on, accepted) => { try { return { ok: true, ...LOCAL().setEnabled(!!on, !!accepted) }; } catch (err) { return { ok: false, error: String(err.message || err) }; } });
 ipcMain.handle('local:install', async e => { try { return { ok: true, ...(await LOCAL().install(s => e.sender.send('local:progress', s))) }; } catch (err) { return { ok: false, error: String(err.message || err) }; } });
+ipcMain.handle('local:importModel', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Choose the downloaded model file (.gguf)', filters: [{ name: 'GGUF model', extensions: ['gguf'] }], properties: ['openFile'] });
+  if (!r.filePaths || !r.filePaths[0]) return { ok: false, cancelled: true };
+  try { return { ok: true, ...LOCAL().importModel(r.filePaths[0]) }; } catch (err) { return { ok: false, error: String(err.message || err) }; }
+});
 ipcMain.handle('local:remove', () => LOCAL().remove());
 app.on('before-quit', () => { try { LOCAL().stop(); } catch (err) {} });
 ipcMain.handle('set:get', () => { const s = settings(); return { domains: s.domains, hasKey: !!getKey() }; });

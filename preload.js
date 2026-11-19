@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('api', {
   localState: () => ipcRenderer.invoke('local:state'),
   localEnable: (on, ok) => ipcRenderer.invoke('local:enable', on, ok),
   localInstall: () => ipcRenderer.invoke('local:install'),
+  localImportModel: () => ipcRenderer.invoke('local:importModel'),
   localRemove: () => ipcRenderer.invoke('local:remove'),
   onLocalProgress: cb => ipcRenderer.on('local:progress', (_, s) => cb(s)),
   openExternal: u => ipcRenderer.invoke('open:ext', u),

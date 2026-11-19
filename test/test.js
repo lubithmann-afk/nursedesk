@@ -158,6 +158,11 @@ console.assert(LC.create({dir:fs.mkdtempSync(path.join(os.tmpdir(),'nd-l2-')),fe
 const bad=async()=>{throw Object.assign(new TypeError('fetch failed'),{cause:{code:'ENOTFOUND'}})};
 let ne='';try{await LC.create({dir:fs.mkdtempSync(path.join(os.tmpdir(),'nd-l3-')),fetchFn:bad,netFetch:bad,platform:'win32'}).install()}catch(e){ne=e.message}
 console.assert(/api\.github\.com/.test(ne)&&/ENOTFOUND/.test(ne),'network failures name the site and the cause, not just "fetch failed"');
+const gp=path.join(os.tmpdir(),'m.gguf'),fb=Buffer.alloc(60*1048576);fb.write('GGUF');fs.writeFileSync(gp,fb);
+const L4=LC.create({dir:fs.mkdtempSync(path.join(os.tmpdir(),'nd-l4-')),fetchFn:fake,platform:'win32'});L4.importModel(gp);
+const before=calls2.length;await L4.install();console.assert(L4.state().installed&&!calls2.slice(before).some(u=>/\.gguf/.test(u)),'an imported model is used and not downloaded again');
+fs.writeFileSync(gp,Buffer.alloc(60*1048576));let ie='';try{L4.importModel(gp)}catch(e){ie=e.message}console.assert(/not a .gguf/.test(ie),'a non-gguf file is rejected');
+fs.writeFileSync(gp,Buffer.from('GGUFxx'));ie='';try{L4.importModel(gp)}catch(e){ie=e.message}console.assert(/too small/.test(ie),'a tiny file is rejected');fs.rmSync(gp);
 L.remove();console.assert(!L.state().installed&&!L.state().enabled,'delete removes the download and switches off');
 console.log('built-in AI tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
