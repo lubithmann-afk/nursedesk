@@ -568,3 +568,11 @@ X('metformin',admin='Hold for contrast dye.')
 X('clozapine',labs='ANC')
 X('ethambutol',labs='Visual acuity and color vision')
 X('methotrexate',admin='Dosed weekly, not daily.')
+
+C('Angiotensin receptor blockers (ARBs)','ARB (name ends in -sartan): high blood pressure, heart failure, kidney protection in diabetes.',
+ 'Block angiotensin II at its receptor, so vessels relax and less aldosterone is made.','Oral at the same time each day; check BP first.|Not for use in pregnancy.',
+ 'Dizziness or low blood pressure|High potassium|Angioedema (rare)|Fetal harm','Potassium|Creatinine and BUN|Blood pressure',
+ 'Teach to rise slowly.|Avoid potassium supplements and salt substitutes unless prescribed.|Report swelling of the face, lips or tongue.')
+C('Migraine drugs','Drugs that stop or prevent migraine headaches.',
+ 'Triptans tighten swollen brain vessels and block pain signaling.','Take at the first sign of a migraine.',
+ 'Chest tightness|Tingling and flushing|Higher blood pressure','Blood pressure','Not for clients with coronary artery disease or uncontrolled high blood pressure.')

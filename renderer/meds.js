@@ -28,7 +28,8 @@ function hl(text,names){
   return s.replace(rx,'<mark>$1</mark>');
 }
 function qIds(ms){return[...new Set(ms.flatMap(m=>m.q))]}
-const badges=m=>[m.s?'PPT':'',m.q.length?'Quiz':'',m.a?'ATI':''].filter(Boolean).map(b=>`<span class="chip" style="margin:0 4px 0 0;font-size:11px">${b}</span>`).join('');
+const isExtra=m=>!(m.s||m.q.length||m.a);
+const badges=m=>[m.s?'PPT':'',m.q.length?'Quiz':'',m.a?'ATI':'',isExtra(m)?'Misc':''].filter(Boolean).map(b=>`<span class="chip" style="margin:0 4px 0 0;font-size:11px">${b}</span>`).join('');
 function medRow(m){return `<div class="mrow" data-m="${m.i}"><div><b>${esc(cap(m.name))}</b>${m.brands.length?` <span class="b">(${esc(m.brands.join(', '))})</span>`:''}</div><div class="cnt">${esc(view==='quiz'?m.q.length+' question'+(m.q.length>1?'s':''):m.cls)}</div></div>`}
 function match(m,t){const h=(m.name+' '+m.brands.join(' ')+' '+m.cls+' '+m.cat).toLowerCase();return t.split(/\s+/).every(w=>h.includes(w))}
 const INTRO={
@@ -36,7 +37,7 @@ const INTRO={
   ppt:'Medications that appear in your Galen PowerPoints. Lines are copied word for word from the slides, followed by a labelled general reference.',
   quiz:'Every medication that comes up in the Galen practice tests, weekly quizzes and the questions inside the class slides. Open one to read each question, its answer and the rationale, or practice just those questions.',
   ati:'Every medication the ATI study guide mentions, with only what that guide says, copied word for word and sorted into the six headings.',
-  misc:'Medications that are not in the PowerPoints, the Galen quizzes or the ATI guide. Only a general reference is available for these.'};
+  misc:'Common medications that are NOT in your PowerPoints, the Galen quizzes or the ATI guide. Each has a general reference I wrote from standard drug references (FDA labeling, MedlinePlus, nursing pharmacology texts). It is not copied from those sources and has not been checked drug by drug, so double check it. No doses.'};
 const FOOT={main:n=>`${n} medication${n===1?'':'s'} on your Main tab.`,ppt:n=>`${n} medication${n===1?'':'s'} found in your Galen PowerPoints.`,quiz:n=>`${n} medication${n===1?'':'s'} found in the Galen practice questions.`,ati:n=>`${n} medication${n===1?'':'s'} mentioned in the ATI study guide.`,misc:n=>`${n} medication${n===1?'':'s'} not found in the other tabs.`};
 function home(){
   const d=D();if(!d){root().innerHTML='<h1>Medications</h1><p class="sub">Medication data is missing from this build.</p>';return}
@@ -112,6 +113,7 @@ function wireHead(i){
   root().querySelectorAll('.vt').forEach(b=>b.onclick=()=>{view=b.dataset.v;choosing=false;detail(i)});
   root().querySelectorAll('.mf a').forEach(a=>a.onclick=()=>window.gotoSlide(a.dataset.d,+a.dataset.n));
   root().querySelectorAll('.atp').forEach(a=>a.onclick=()=>window.gotoSlide(atiDeck(),+a.dataset.n));
+  root().querySelectorAll('.lk').forEach(a=>a.onclick=()=>window.api.openExternal(a.dataset.u));
   document.getElementById('pane-meds').scrollTop=0;
 }
 function detailQuiz(i){
@@ -122,16 +124,20 @@ function detailQuiz(i){
   const pq=document.getElementById('pq');if(pq)pq.onclick=()=>practice(m.q);
   wireHead(i);
 }
+const TRUST='This medication was not found in your PowerPoints, the Galen quizzes or the ATI guide, so everything below is a general reference I wrote from standard drug references (FDA labeling, MedlinePlus and nursing pharmacology texts). It is not copied from them and I could not check it drug by drug against a live source. It has no doses. Always check your course drug guide, the package labeling or the provider’s order.';
+const lookups=m=>`<div class="mfh">Look it up in a trusted source</div><div class="row2" style="margin:0 0 6px"><a class="lk" data-u="https://vsearch.nlm.nih.gov/vivisimo/cgi-bin/query-meta?v%3Aproject=medlineplus&query=${encodeURIComponent(m.name)}" style="color:var(--acc);cursor:pointer">MedlinePlus (NIH)</a> · <a class="lk" data-u="https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=${encodeURIComponent(m.name)}" style="color:var(--acc);cursor:pointer">DailyMed (FDA labels)</a></div>`;
 function detail(i){
-  if(view==='quiz')return detailQuiz(i);
+  if(view==='quiz'&&D().meds[i].q.length)return detailQuiz(i);
+  if(view==='quiz')view='main';
   const d=D(),m=d.meds[i];cur=i;
+  const extra=isExtra(m);
   const showSlides=view!=='ati',showAti=view==='main'||view==='ati',showGen=view!=='ati';
   const linesOf=(k,ati)=>m.f[k].m.filter(x=>isAti(x)===ati);
   const block=(title,L)=>L.length?`<div class="mfh">${title}</div><ul class="mfl">${L.map(x=>srcLine(m,x)).join('')}</ul>`:'';
   const sec=([k,t])=>{
     const f=m.f[k],S=showSlides?linesOf(k,false):[],A=showAti?linesOf(k,true):[];
     let mine=block('From your class slides',S)+block('From the ATI study guide',A);
-    if(!mine&&view!=='misc')mine=`<div class="mfn">${view==='ati'?'Nothing about this under this heading in the ATI study guide.':view==='main'?'Nothing specific about this drug under this heading in your class slides or the ATI guide.':'Nothing specific about this drug in your class slides.'}</div>`;
+    if(!mine&&view!=='misc'&&!extra)mine=`<div class="mfn">${view==='ati'?'Nothing about this under this heading in the ATI study guide.':view==='main'?'Nothing specific about this drug under this heading in your class slides or the ATI guide.':'Nothing specific about this drug in your class slides.'}</div>`;
     const gen=showGen&&f.g.length?`<div class="mfh gen">General reference <span>(my own summary, not from your class materials)</span></div><ul class="mfl gen">${f.g.map(x=>`<li class="mf">${esc(x)}</li>`).join('')}</ul>`:'';
     return `<h2 class="msec">${t}</h2>${mine}${gen}`;
   };
@@ -139,7 +145,7 @@ function detail(i){
     ppt:'Lines under “From your class slides” are copied word for word from your PowerPoints; tap Open to see them in place. The general reference fills gaps with standard teaching and has no doses.',
     ati:'Everything below is copied word for word from the ATI study guide; tap Open to see the page. Nothing here is my own summary.',
     misc:'This medication was not found in your PowerPoints, the Galen quizzes or the ATI guide, so this is only a general reference (my own summary, no doses).'}[view];
-  root().innerHTML=head(m,i)+`<p class="cnt">${note} Always check your course drug guide or the provider’s order for doses and parameters.</p>
+  root().innerHTML=head(m,i)+`${extra?`<div class="card" style="border-color:var(--bad)"><b>Not from your class materials</b><div class="cnt" style="margin-top:6px">${TRUST}</div></div>${lookups(m)}`:`<p class="cnt">${note} Always check your course drug guide or the provider’s order for doses and parameters.</p>`}
    ${showAti&&m.ap&&m.ap.length&&atiDeck()?`<div class="mfh">Pages of the ATI study guide that mention it</div><div class="row2" style="margin:0 0 6px">${m.ap.map(n=>`<a class="atp" data-n="${n}" style="color:var(--acc);cursor:pointer">p. ${n}</a>`).join(' · ')}</div>`:''}
    ${FIELDS.map(sec).join('')}
    ${view==='main'&&m.q.length?`<details class="mqs" style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">Galen practice questions that mention it (${m.q.length})</summary><div style="margin-top:8px">${m.q.map(id=>qCard(m,id)).join('')}</div></details>`:''}

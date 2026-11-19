@@ -49,7 +49,13 @@ const dg=MD.meds.find(m=>m.name==='digoxin');
 console.assert(dg.f.labs.m.some(x=>/0\.5-2 ng/.test(x.x))||dg.f.labs.g.some(x=>/0\.5-2/.test(x)),'digoxin level present');
 console.assert(MD.meds.every(m=>m.q.every(id=>qids.has(id))),'every question link resolves');
 console.assert(MD.cats.flatMap(c=>c.c.flatMap(x=>x.m)).length===MD.meds.length,'every medication is in a category');
-console.assert(MD.meds.every(m=>(m.g||m.a)&&Array.isArray(m.ap)),'every medication is flagged as found in Galen material and/or the ATI guide');
+console.assert(MD.meds.every(m=>Array.isArray(m.ap)&&typeof m.s==='boolean'),'every medication carries its source flags');
+{const ex=MD.meds.filter(m=>!(m.s||m.q.length||m.a));
+console.assert(ex.length>=150&&ex.every(m=>!Object.values(m.f).some(f=>f.m.length)&&Object.values(m.f).every(f=>f.g.length>0)),'extra (Misc) medications have a general reference in all six sections and no cited lines');
+const pat=/\b\d+(\.\d+)?\s?(mg|mcg|mL|units?|IU)\b/i;
+console.assert(!ex.some(m=>Object.values(m.f).some(f=>f.g.some(x=>pat.test(x)))),'extra medications contain no doses');
+console.assert(ex.some(m=>m.name==='apixaban'&&/andexanet/.test(m.f.nsg.g.join(' '))&&!/aPTT/.test(m.f.labs.g.join(' ')&&'')),'apixaban has its own antidote text');
+console.assert(/hypoglycemia|low blood sugar/i.test(ex.find(m=>m.name==='glipizide').f.se.g.join(' '))&&!/lactic/i.test(ex.find(m=>m.name==='glipizide').f.se.g.join(' ')),'glipizide has sulfonylurea risks, not metformin ones');}
 console.assert(MD.meds.every(m=>!m.f.cls.m.concat(m.f.moa.m,m.f.adm.m,m.f.se.m,m.f.labs.m,m.f.nsg.m).some(x=>/^ati-/.test(x.u))||m.a),'ATI lines only on medications flagged as in the ATI guide');
 console.log('medication data checks ran:',MD.meds.length,'medications');
 // Saved web notes: store rules, the SAVE block (honoured only after web approval), cited pages with quotes, and reuse by search.

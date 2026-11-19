@@ -6,6 +6,7 @@ HERE=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.abspath(os.path.joi
 sys.path.insert(0,HERE)
 from lexicon import L
 from reference import R,D
+from extras import EX
 SKIP_DECKS={'nur-283-syllabus-winter-2026'}
 norm=lambda t:t.replace('’',"'").replace('‘',"'").replace('–','-').replace(' ',' ')
 
@@ -148,11 +149,12 @@ for q in qd['bank']:
 
 # ---- output only medications that appear somewhere in the materials
 cats=[];idx={}
-keep=[m for m in meds if m['slides'] or m['q']]
+keep=[m for m in meds if m['slides'] or m['q'] or m['name'] in EX]   # EX: extra drugs found in none of the materials (Misc tab)
 out=[]
 for m in keep:
     m['i']=len(out)
-    r=R[m['cls']];d=D.get(m['name'],{})
+    extra=m['name'] in EX and not (m['slides'] or m['q'])
+    r=EX[m['name']] if extra else R[m['cls']];d={} if extra else D.get(m['name'],{})
     f={}
     for k in ('cls','moa','adm','se','labs','nsg'):
         gk='admin' if k=='adm' else k
