@@ -112,22 +112,32 @@ const isDeck=s=>/^Class slides/.test(s);
 const isWq=s=>/^Weekly quiz/.test(s);
 const sn=i=>{const s=D.src[i];if(isWq(s))return s.replace(/^Weekly quiz\s*[–-]\s*/,'');if(isDeck(s))return s.replace(/^Class slides\s*[–-]\s*/,'').replace(/^Class slides/,'Imported');return PT_NAMES[i]||s};
 const cnt=i=>D.bank.filter(q=>q.s===i).length;
+// "Done" = at least one question from that category answered. Green < 2 days ago, yellow 2-6 days, red 7+ days.
+const DAY=864e5,DONE_COL={g:'#2e9e5b',y:'#c99700',r:'#d64545'};
+const lastDone=qs=>{let t=0;qs.forEach(q=>{const a=P.a[q.id];if(a&&a.t>t)t=a.t});return t};
+const freshOf=t=>{if(!t)return null;const d=(Date.now()-t)/DAY;return d<2?'g':d<7?'y':'r'};
+const agoOf=t=>{const d=Math.floor((Date.now()-t)/DAY);return d<1?'today':d===1?'yesterday':d+' days ago'};
+const srcQs=v=>v==='wq'?D.bank.filter(q=>isWq(D.src[q.s])):D.bank.filter(q=>q.s===+v);
+function doneOpt(v,label,n){const t=lastDone(srcQs(v)),f=freshOf(t);
+  return `<option value="${v}"${f?` style="color:${DONE_COL[f]}"`:''}>${f?'✓ ':''}${esc(label)} (${n})${f?' · '+agoOf(t):''}</option>`}
+function paintDone(id){const S=$('#'+id),B=$('#dn_'+id);if(!S||!B)return;const t=lastDone(srcQs(S.value)),f=freshOf(t);
+  B.textContent=f?'✓ '+agoOf(t):'';B.style.color=f?DONE_COL[f]:'';B.title=f?'Last practiced '+agoOf(t):'Not done yet'}
 function poolRows(){
   const pt=[],dk=[],wq=[];D.src.forEach((s,i)=>(isWq(s)?wq:isDeck(s)?dk:pt).push(i));
-  const sel=(id,idx)=>`<select id="${id}" class="dd">${idx.map(i=>`<option value="${i}">${esc(sn(i))} (${cnt(i)})</option>`).join('')}</select>`;
+  const sel=(id,idx)=>`<select id="${id}" class="dd">${idx.map(i=>doneOpt(i,sn(i),cnt(i))).join('')}</select>`;
   return `<label class="row"><input type="radio" name="p" value="all" checked><div><b>All questions mixed</b><div class="cnt">${D.bank.length} questions</div></div></label>
    <label class="row"><input type="radio" name="p" value="missed" id="rm"><div><b>Only questions I missed</b><div class="cnt" id="mc"></div></div></label>
    <label class="row"><input type="radio" name="p" value="weak" id="rw"><div><b>Practice my weak areas</b><div class="cnt" id="wc"></div></div></label>
-   <label class="row"><input type="radio" name="p" id="rpt" value="${pt[0]}"><div style="flex:1"><b>Practice tests</b>${sel('spt',pt)}</div></label>
-   ${dk.length?`<label class="row"><input type="radio" name="p" id="rdk" value="${dk[0]}"><div style="flex:1"><b>Class PowerPoints</b>${sel('sdk',dk)}</div></label>`:''}
-   ${wq.length?`<label class="row"><input type="radio" name="p" id="rwq" value="wq"><div style="flex:1"><b>Weekly quizzes</b><select id="swq" class="dd"><option value="wq">All weekly quizzes (${D.bank.filter(q=>isWq(D.src[q.s])).length})</option>${wq.map(i=>`<option value="${i}">${esc(sn(i))} (${cnt(i)})</option>`).join('')}</select></div></label>`:''}`;
+   <label class="row"><input type="radio" name="p" id="rpt" value="${pt[0]}"><div style="flex:1"><b>Practice tests</b> <span class="dn" id="dn_spt"></span>${sel('spt',pt)}</div></label>
+   ${dk.length?`<label class="row"><input type="radio" name="p" id="rdk" value="${dk[0]}"><div style="flex:1"><b>Class PowerPoints</b> <span class="dn" id="dn_sdk"></span>${sel('sdk',dk)}</div></label>`:''}
+   ${wq.length?`<label class="row"><input type="radio" name="p" id="rwq" value="wq"><div style="flex:1"><b>Weekly quizzes</b> <span class="dn" id="dn_swq"></span><select id="swq" class="dd">${doneOpt('wq','All weekly quizzes',D.bank.filter(q=>isWq(D.src[q.s])).length)}${wq.map(i=>doneOpt(i,sn(i),cnt(i))).join('')}</select></div></label>`:''}`;
 }
 function home(){
   const sr=savedRun();const ans=sr?sr.run.filter(x=>x.pick!==null).length:0;
   app.innerHTML=`<h1>NUR 283 Comp Practice Tests</h1>
   <p class="sub">${D.bank.length} questions from your six PDFs, with an NCLEX-style rationale after every answer.</p>
   ${sr?`<div class="card" style="border-color:var(--acc)"><h2>Unfinished test</h2><div class="cnt" style="margin-bottom:10px">${ans} of ${sr.run.length} answered. Pick up where you left off.</div><button class="p" style="width:100%" id="rsm">Resume test</button><button style="width:100%;margin-top:8px" id="dsc">Discard this test</button></div>`:''}
-  <div class="card"><h2>1. Choose a question pool</h2>${poolRows()}</div>
+  <div class="card"><h2>1. Choose a question pool</h2><div class="cnt" style="margin-bottom:8px">A check mark means you have practiced it: <span style="color:#2e9e5b">green</span> within 2 days, <span style="color:#c99700">yellow</span> after 2 days, <span style="color:#d64545">red</span> after a week without practicing it.</div>${poolRows()}</div>
   <div class="card"><h2>2. How many questions?</h2><div class="big" id="n">50</div>
    <input type="range" id="r" min="1" max="50" value="50">
    <label class="row" style="margin-top:12px"><input type="checkbox" id="sh" checked><div>Shuffle questions and answer order</div></label>
@@ -140,7 +150,8 @@ function home(){
   if(sr){$('#rsm').onclick=resume;const d=$('#dsc');d.onclick=()=>{d.textContent='Tap again to discard';d.onclick=discardRun}}
   const upd=()=>{const p=document.querySelector('input[name=p]:checked').value;const pool=getPool(p);const r=$('#r');r.max=Math.min(50,Math.max(1,pool.length));if(+r.value>+r.max)r.value=r.max;$('#n').textContent=r.value;$('#note').textContent=pool.length+' in pool';$('#go').disabled=pool.length===0};
   {$('#mc').textContent=missedIds().length+' still marked wrong (saved)';const wt=weakTopics();$('#wc').textContent=wt.length?wt.slice(0,3).map(s=>s.name).join(', ')+(wt.length>3?'…':''):'Answer more questions to find them'}
-  [['spt','rpt'],['sdk','rdk'],['swq','rwq']].forEach(([s,r])=>{const S=$('#'+s);if(!S)return;S.onclick=e=>e.stopPropagation();S.onchange=()=>{const R=$('#'+r);R.value=S.value;R.checked=true;R.dispatchEvent(new Event('change'))}});
+  ['spt','sdk','swq'].forEach(paintDone);
+  [['spt','rpt'],['sdk','rdk'],['swq','rwq']].forEach(([s,r])=>{const S=$('#'+s);if(!S)return;S.onclick=e=>e.stopPropagation();S.onchange=()=>{paintDone(s);const R=$('#'+r);R.value=S.value;R.checked=true;R.dispatchEvent(new Event('change'))}});
   document.querySelectorAll('input[name=p]').forEach(e=>e.onchange=()=>{upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value});
   $('#r').oninput=()=>$('#n').textContent=$('#r').value;
   upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value;
