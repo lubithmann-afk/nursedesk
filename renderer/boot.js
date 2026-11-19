@@ -11,7 +11,7 @@ const tb=document.getElementById('theme');
 const paintTheme=()=>{tb.textContent=window.themeIcon()};paintTheme();
 tb.onclick=()=>window.toggleTheme();window.themeChanged=()=>{paintTheme();window.settingsShow&&document.getElementById('pane-settings').classList.contains('on')&&window.settingsShow()};
 api.version().then(v=>{window.APP_VERSION=v;document.getElementById('ver').textContent='v'+v});
-window.startPractice();window.slidesInit();window.medsInit&&window.medsInit();window.aiInit();window.settingsInit();
+window.packReady.then(()=>{window.startPractice();window.slidesInit();window.medsInit&&window.medsInit();window.aiInit();window.settingsInit()});
 // open a slide from anywhere
 window.gotoSlide=(deckId,n)=>{document.querySelector('[data-t=slides]').click();window.slidesOpen(deckId,n)};
 

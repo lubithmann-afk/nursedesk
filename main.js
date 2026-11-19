@@ -195,17 +195,53 @@ function create() {
     });
   }
 }
-function seedLibrary() {
+// ---- course pack: the Galen/ATI-derived content (slide decks, question banks, cited lines) is NOT bundled with the app.
+// A student imports a pack file (a .zip from a classmate) in Settings; it is unpacked into the user-data folder.
+const PACK = () => path.join(U(), 'pack');
+const PACKDECKS = () => path.join(U(), 'pack_decks.json');
+const packInfo = () => rj(path.join(PACK(), 'manifest.json'), null);
+function seedFromPack() {                                   // copy the pack's decks into the Library (only the ones not already there)
   try {
-    const src = path.join(__dirname, 'data', 'seed'); if (!fs.existsSync(src)) return;
+    const src = path.join(PACK(), 'seed'); if (!fs.existsSync(src)) return [];
+    const ids = [];
     for (const id of fs.readdirSync(src)) {
+      const f = path.join(src, id, 'deck.json'); if (!fs.existsSync(f)) continue;
       const dst = path.join(LIB(), id);
-      if (!fs.existsSync(path.join(dst, 'deck.json'))) { fs.mkdirSync(path.join(dst, 'media'), { recursive: true }); fs.copyFileSync(path.join(src, id, 'deck.json'), path.join(dst, 'deck.json')); }
+      if (!fs.existsSync(path.join(dst, 'deck.json'))) { fs.mkdirSync(path.join(dst, 'media'), { recursive: true }); fs.copyFileSync(f, path.join(dst, 'deck.json')); }
+      ids.push(id);
     }
-  } catch (e) {}
+    wj(PACKDECKS(), ids); return ids;
+  } catch (e) { return []; }
 }
+async function importPack(file) {
+  const JSZip = require('jszip');
+  const zip = await JSZip.loadAsync(fs.readFileSync(file));
+  const mf = zip.file('manifest.json'); if (!mf) throw new Error('That is not a NurseDesk course pack (no manifest).');
+  let man; try { man = JSON.parse(await mf.async('string')); } catch (e) { throw new Error('The pack manifest is damaged.'); }
+  if (man.format !== 1) throw new Error('This pack was made for a different version of the app.');
+  const tmp = PACK() + '.new'; fs.rmSync(tmp, { recursive: true, force: true });
+  for (const [name, entry] of Object.entries(zip.files)) {
+    if (entry.dir || !/^(manifest\.json|questions\.json|meds_cited\.json|glossary_class\.json|seed\/[^/]+\/deck\.json)$/.test(name)) continue;   // only known files, nothing else
+    const p = path.join(tmp, name); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, await entry.async('nodebuffer'));
+  }
+  if (!fs.existsSync(path.join(tmp, 'questions.json'))) { fs.rmSync(tmp, { recursive: true, force: true }); throw new Error('The pack has no questions file.'); }
+  removePackDecks(); fs.rmSync(PACK(), { recursive: true, force: true }); fs.renameSync(tmp, PACK());
+  seedFromPack(); reindex(); return packInfo();
+}
+function removePackDecks() { try { for (const id of rj(PACKDECKS(), [])) fs.rmSync(path.join(LIB(), path.basename(String(id))), { recursive: true, force: true }); } catch (e) {} fs.rmSync(PACKDECKS(), { force: true }); }
+ipcMain.handle('pack:info', () => packInfo());
+ipcMain.handle('pack:data', () => {
+  if (!packInfo()) return null;
+  return { QD: rj(path.join(PACK(), 'questions.json'), null), meds: rj(path.join(PACK(), 'meds_cited.json'), null), glossary: rj(path.join(PACK(), 'glossary_class.json'), null) };
+});
+ipcMain.handle('pack:import', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Choose the course pack (.zip)', filters: [{ name: 'Course pack', extensions: ['zip'] }], properties: ['openFile'] });
+  if (!r.filePaths || !r.filePaths[0]) return { ok: false, cancelled: true };
+  try { return { ok: true, info: await importPack(r.filePaths[0]) }; } catch (err) { return { ok: false, error: String(err.message || err) }; }
+});
+ipcMain.handle('pack:remove', () => { removePackDecks(); fs.rmSync(PACK(), { recursive: true, force: true }); reindex(); return true; });
 app.whenReady().then(() => {
-  seedLibrary(); reindex(); create();
+  seedFromPack(); reindex(); create();
   try { initUpdater(); if (au) au.checkForUpdates().catch(() => {}); } catch (e) {}
 });
 app.on('window-all-closed', () => app.quit());

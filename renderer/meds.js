@@ -29,10 +29,10 @@ function home(){
         ${qs.length?`<button class="pc" data-c="${esc(c.n)}">Practice ${qs.length} question${qs.length>1?'s':''} on this category</button>`:''}
         ${c.c.map(x=>`<div class="mcls">${esc(x.n)}</div>${x.m.map(i=>medRow(d.meds[i])).join('')}`).join('')}</div></details>`}).join('');
   }
-  root().innerHTML=`<h1>Medications</h1><p class="sub">Every medication that appears in your PowerPoints, the ATI guide and the practice questions, grouped by category. Each one shows its classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions.</p>
+  root().innerHTML=`<h1>Medications</h1><p class="sub">Medications grouped by category. Each one shows its classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions.</p>
    <div class="mtop"><input type="text" id="mq" placeholder="Search by name, brand, class or category (e.g. Lasix, beta blocker, antidote)" value="${esc(q)}">
    ${d.suffix?'<button id="suf">Drug class endings (ATI guide)</button>':''}</div>${body}
-   <p class="cnt" style="margin-top:14px">${d.meds.length} medications. Built from the bundled class slides, the ATI guide and the question bank, not from files you imported yourself.</p>`;
+   <p class="cnt" style="margin-top:14px">${d.meds.length} medications. ${window.PACK_INFO?'Includes lines from your course pack, cited with Open links.':'General reference only. Import a course pack in Settings to add lines from your class slides and the ATI guide.'}</p>`;
   const mq=document.getElementById('mq');mq.oninput=()=>{q=mq.value;const p=mq.selectionStart;home();const n=document.getElementById('mq');n.focus();n.setSelectionRange(p,p)};
   const suf=document.getElementById('suf');if(suf)suf.onclick=()=>window.gotoSlide(d.suffix.d,d.suffix.n);
   root().querySelectorAll('.mrow').forEach(e=>e.onclick=()=>{scroll=document.getElementById('pane-meds').scrollTop;detail(+e.dataset.m)});

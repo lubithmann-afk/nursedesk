@@ -16,10 +16,10 @@ const best=()=>ls.get('nd_game_best',{});
 const hist=()=>{const p=ls.get('nur283_progress',null);return p&&p.a?p.a:{}};
 // ---- menu
 function menu(){
-  clearTimers();S=null;if(!window.QD){root().innerHTML='<div class="gm"><h1>Game</h1></div>';return}
+  clearTimers();S=null;if(!window.QD){root().innerHTML='<div class="gm"><h1>Game</h1><p class="sub">The game needs questions. Import a course pack in Settings to play.</p></div>';return}
   cats=G.categories(window.QD,window.MEDS);if(!menuKey||!cats.find(c=>c.key===menuKey))menuKey='all';
   const groups=[...new Set(cats.map(c=>c.group))],b=best();
-  root().innerHTML=`<div class="gm"><h1>Who Wants to Be an RN?</h1><div class="g-tag">15 questions. Each one is worth more. Don’t lose it all.</div>
+  root().innerHTML=`<div class="gm"><h1>The NCLEX Ladder</h1><div class="g-tag">15 questions. Each one is worth more. Don’t lose it all.</div>
    <div class="g-menu"><div class="g-box"><b>Pick a category</b><br><br><select id="gc">${groups.map(g=>`<optgroup label="${esc(g)}">${cats.filter(c=>c.group===g).map(c=>`<option value="${esc(c.key)}" ${c.key===menuKey?'selected':''}>${esc(c.label)} (${c.own.length})</option>`).join('')}</optgroup>`).join('')}</select>
     <div class="g-note" id="gi"></div></div>
     <button class="g-go" id="gp">Play</button>
@@ -87,7 +87,7 @@ function end(kind){
   const b=best();if(won>(b[S.key]||0)){b[S.key]=won;ls.set('nd_game_best',b)}
   if(kind==='win')sfx.win();
   const missed=S.log.filter(x=>!x.ok).map(x=>x.id);
-  root().innerHTML=`<div class="gm"><div class="g-end"><h1>${kind==='win'?'You’re a millionaire!':kind==='walk'?'You walked away':'Game over'}</h1>
+  root().innerHTML=`<div class="gm"><div class="g-end"><h1>${kind==='win'?'You reached the top!':kind==='walk'?'You walked away':'Game over'}</h1>
    <div class="g-big">${G.money(won)}</div><div class="g-tag">${kind==='win'?'All 15 correct. Perfect run.':kind==='walk'?`You stopped at question ${S.i+1} of 15.`:`You went out on question ${S.i+1}. ${won?`You keep your safe ${G.money(won)}.`:'No safe amount reached yet.'}`}</div>
    <div class="g-rev">${S.log.map((x,i)=>`<div class="${x.ok?'g-ok':'g-no'}">${x.ok?'✔':'✘'} Q${i+1}: ${esc(x.q.length>110?x.q.slice(0,107)+'…':x.q)}<br><span style="color:#b8c4ff">${x.ok?'Your answer: ':'Correct answer: '}${esc(x.right)}</span></div>`).join('')}</div>
    <div class="g-acts"><button class="g-go" id="ea" style="margin:0">Play again</button><button class="g-ghost" id="ec">Change category</button>${missed.length&&window.practiceIds?`<button class="g-ghost" id="ep">Practice the ${missed.length} I missed</button>`:''}</div></div></div>`;
