@@ -59,8 +59,12 @@ function detail(i){
    <p class="sub">${m.brands.length?`Also called: ${esc(m.brands.join(', '))}<br>`:''}<span class="chip">${esc(m.cat)}</span><span class="chip">${esc(m.cls)}</span></p>
    <p class="cnt">Lines under “From your materials” are copied word for word from your slides or the ATI guide; tap Open to see them in place. The general reference fills gaps with standard teaching and has no doses. Always check your course drug guide or the provider’s order for doses and parameters.</p>
    ${FIELDS.map(sec).join('')}
+   <div class="row2" style="margin-top:14px"><span class="cnt">Study this drug with your own account:</span><button id="hgpt">Ask ChatGPT</button><button id="hcl">Ask Claude</button></div><div class="cnt" id="hmsg"></div>
    ${m.q.length?`<button class="p" id="pq" style="margin-top:16px">Practice ${m.q.length} question${m.q.length>1?'s':''} on this medication</button>`:''}`;
   document.getElementById('bk').onclick=()=>{cur=null;home();document.getElementById('pane-meds').scrollTop=scroll};
+  for(const [id,site] of [['hgpt','chatgpt'],['hcl','claude']])document.getElementById(id).onclick=async()=>{
+    const ex=FIELDS.map(([k,t])=>({src:t,text:m.f[k].m.map(x=>x.x+' ('+(D().decks[x.u.split(':')[0]].k==='page'?'ATI guide p. '+x.u.split(':')[1]:short(D().decks[x.u.split(':')[0]].n)+' slide '+x.u.split(':')[1])+')').join('\n')})).filter(e=>e.text);
+    document.getElementById('hmsg').textContent=await window.handoff.send(site,window.handoff.prompt(`Teach me ${cap(m.name)} (${m.cls}): classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions, then quiz me with 3 NCLEX-style questions.`,ex))};
   const pq=document.getElementById('pq');if(pq)pq.onclick=()=>practice(m.q);
   root().querySelectorAll('.mf a').forEach(a=>a.onclick=()=>window.gotoSlide(a.dataset.d,+a.dataset.n));
   document.getElementById('pane-meds').scrollTop=0;

@@ -36,7 +36,9 @@ async function keyCard(msg){
 const keyHint=e=>/No API key/i.test(e)?'\n\nNo key is saved yet. Follow the setup steps at the top of this tab.':/invalid|authentic|x-api-key|permission|unauthor|401|403/i.test(e)?'\n\nThe key was rejected. Check it was copied completely, or create a new key (see “How to get or replace your API key” above).':/credit|balance|billing|payment|quota|rate/i.test(e)?'\n\nYour Anthropic account may be out of credit. Open the Console, go to Billing, and add credits.':'';
 function init(){
   root().innerHTML=`<div class="cl"><h1 style="margin-top:0">Ask AI</h1><div id="keycard"></div><div class="log" id="log"></div><div class="st" id="st"></div>
-  <div class="row2"><input type="text" id="in" placeholder="Ask about your class material…"><button class="p" id="go2">Ask</button><button id="clr">Clear</button></div></div>`;
+  <div class="row2"><input type="text" id="in" placeholder="Ask about your class material…"><button class="p" id="go2">Ask</button><button id="clr">Clear</button></div>
+  <div class="row2" style="margin-top:6px"><span class="cnt">No API key? Use your own account:</span><button id="hgpt">Ask in ChatGPT</button><button id="hcl">Ask in Claude</button></div><div class="cnt" id="hmsg"></div></div>`;
+  for(const [id,site] of [['hgpt','chatgpt'],['hcl','claude']])document.getElementById(id).onclick=async()=>{const q=document.getElementById('in').value.trim(),m=document.getElementById('hmsg');if(!q){m.textContent='Type your question first.';return}m.textContent=await window.handoff.send(site,await window.handoff.fromSearch(q))};
   api.onStatus(s=>{const e=document.getElementById('st');if(e)e.textContent=s});
   document.getElementById('go2').onclick=()=>send(document.getElementById('in').value);
   document.getElementById('in').onkeydown=e=>{if(e.key==='Enter')send(e.target.value)};
