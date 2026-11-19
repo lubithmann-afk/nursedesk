@@ -4,13 +4,14 @@
 <link rel="stylesheet" href="quiz.css"><link rel="stylesheet" href="app.css"><script src="theme.js"></script>
 </head><body>
 <header id="tabs"><b class="logo">NurseDesk</b>
- <button data-t="practice" class="on">Practice</button><button data-t="slides">Library</button><button data-t="meds">Medications</button><button data-t="ai">Ask AI</button><button data-t="settings">Settings</button>
+ <button data-t="practice" class="on">Practice</button><button data-t="slides">Library</button><button data-t="meds">Medications</button><button data-t="notes">Web Notes</button><button data-t="ai">Ask AI</button><button data-t="settings">Settings</button>
  <span id="ver" class="ver"></span><button id="theme" class="themebtn" title="Toggle dark mode"></button>
 </header>
 <main>
  <section id="pane-practice" class="pane on"><div class="wrap" id="practice"></div></section>
  <section id="pane-slides" class="pane"><div class="wrap" id="slides"></div></section>
  <section id="pane-meds" class="pane"><div class="wrap" id="meds"></div></section>
+ <section id="pane-notes" class="pane"><div class="wrap" id="notes"></div></section>
  <section id="pane-ai" class="pane"><div class="wrap" id="aiw"></div></section>
  <section id="pane-settings" class="pane"><div class="wrap" id="settings"></div></section>
 </main>
@@ -20,6 +21,7 @@
 <script src="practice.js"></script>
 <script src="slides.js"></script>
 <script src="meds.js"></script>
+<script src="notes.js"></script>
 <script src="ai.js"></script>
 <script src="settings.js"></script>
 <script src="boot.js"></script>
