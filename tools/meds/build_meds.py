@@ -160,7 +160,7 @@ for m in keep:
         f[k]={'m':m['f'][k],'g':g}
     ap=sorted({int(x['u'].split(':')[1]) for x in m['slides'] if x['u'].split(':')[0]==ATI_ID})
     g=bool(m['q']) or any(x['u'].split(':')[0]!=ATI_ID for x in m['slides'])       # found in Galen material: a class slide or a Galen practice/quiz question
-    out.append({'i':m['i'],'name':m['name'],'brands':m['brands'],'cat':m['cat'],'cls':m['cls'],'f':f,'q':m['q'],'g':g,'a':bool(ap),'ap':ap})
+    out.append({'i':m['i'],'name':m['name'],'brands':m['brands'],'cat':m['cat'],'cls':m['cls'],'f':f,'q':m['q'],'g':g,'s':any(x['u'].split(':')[0]!=ATI_ID for x in m['slides']),'a':bool(ap),'ap':ap})
 for cat in L:
     cl=[]
     for cls in L[cat]:
