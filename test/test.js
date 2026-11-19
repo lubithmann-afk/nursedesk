@@ -100,5 +100,22 @@ const hid=new Set(GL.fifty(2,new Set(),grng));console.assert(hid.size===2&&!hid.
 const au=GL.audience(2,3,hid,grng);console.assert(au.reduce((a,b)=>a+b)===100&&[...hid].every(i=>au[i]===0),'audience adds to 100 and ignores removed answers');
 const fr=GL.friend(1,0,new Set(),grng);console.assert(fr.pick>=0&&fr.pick<4,'friend picks an answer');
 console.log('game mode tests ran');
+// Challenge-mode coach: the first call must not reveal the answer; the second gets the key, rationale and the student's reasoning.
+const {coach,buildPrompt}=require('../lib/coach');
+const cq={question:'A client reports chest pain. What should the nurse do first?',options:['Obtain an ECG','Give aspirin','Call the family','Document'],chosen:[0],correct:[1],rationale:'SECRET-RATIONALE'};
+const p1=buildPrompt({...cq,stage:'prompt'});
+console.assert(!/SECRET-RATIONALE|Correct answer|CORRECT|INCORRECT/.test(p1.messages[0].content),'coach prompt stage never contains the answer key or rationale');
+console.assert(/Do NOT say or hint/.test(p1.messages[0].content)&&/Safety first/.test(p1.system),'prompt stage forbids hints and the coach is safety-first');
+const p2=buildPrompt({...cq,stage:'feedback',explanation:'ECG first to look for ST changes'});
+console.assert(/SECRET-RATIONALE/.test(p2.messages[0].content)&&/INCORRECT/.test(p2.messages[0].content)&&/ECG first/.test(p2.messages[0].content),'feedback stage has the key, result, rationale and the student explanation');
+console.assert(/CORRECT/.test(buildPrompt({...cq,stage:'feedback',chosen:[1]}).messages[0].content.match(/student was \w+/)[0]),'a correct pick is reported as correct');
+console.assert(buildPrompt({stage:'feedback',question:'q',options:['a','b'],chosen:[9],correct:[-1,5]}).messages[0].content.includes('(nothing)'),'out-of-range choices are ignored');
+let cb=null;global.fetch=async(u,o)=>{cb={h:o.headers,b:JSON.parse(o.body)};return{ok:true,json:async()=>({content:[{type:'text',text:'  Why that choice?  '}]})}};
+const ct=await coach({...cq,stage:'prompt'},{key:'k-test'});
+console.assert(ct==='Why that choice?'&&cb.h['x-api-key']==='k-test'&&!cb.b.tools&&cb.b.max_tokens<=500,'coach makes one plain call with no tools');
+let nk='';try{await coach({...cq,stage:'prompt'},{key:''})}catch(e){nk=String(e.message)}console.assert(/No API key/.test(nk),'coach needs a key');
+const allc=GL.categories(QDg,MDg,{all:true});
+console.assert(allc[0].own.length===QDg.bank.length&&allc[0].own.some(q=>Array.isArray(q.a)),'challenge categories include select-all questions');
+console.log('challenge coach tests ran');
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();

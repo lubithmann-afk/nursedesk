@@ -134,8 +134,9 @@ function home(){
    <div class="cnt" id="note"></div></div>
   <button class="p" style="width:100%" id="go">Start test</button>
   <button style="width:100%;margin-top:10px" id="imp">My progress &amp; areas to improve</button>
+  <button style="width:100%;margin-top:10px" id="chl">Challenge mode: explain your reasoning to an AI coach</button>
   <p class="sv" id="sv" style="margin-top:10px;text-align:center"></p>`;
-  setSv();$('#imp').onclick=improve;
+  setSv();$('#imp').onclick=improve;$('#chl').onclick=()=>window.challengeStart&&window.challengeStart();
   if(sr){$('#rsm').onclick=resume;const d=$('#dsc');d.onclick=()=>{d.textContent='Tap again to discard';d.onclick=discardRun}}
   const upd=()=>{const p=document.querySelector('input[name=p]:checked').value;const pool=getPool(p);const r=$('#r');r.max=Math.min(50,Math.max(1,pool.length));if(+r.value>+r.max)r.value=r.max;$('#n').textContent=r.value;$('#note').textContent=pool.length+' in pool';$('#go').disabled=pool.length===0};
   {$('#mc').textContent=missedIds().length+' still marked wrong (saved)';const wt=weakTopics();$('#wc').textContent=wt.length?wt.slice(0,3).map(s=>s.name).join(', ')+(wt.length>3?'…':''):'Answer more questions to find them'}
@@ -154,6 +155,7 @@ function start(p,n,sh){
   st.i=0;saveRun();show();
 }
 // used by the Medications tab: practice just the questions that mention a medication
+window.practiceHome=()=>{home()};   // used by Challenge mode to return to this screen
 window.practiceIds=ids=>{const set=new Set(ids);const pool=shuffle(D.bank.filter(q=>set.has(q.id)));if(!pool.length)return;st.run=pool.map(q=>({q,idx:shuffle(q.o.map((_,i)=>i)),pick:null}));st.i=0;saveRun();show();};
 // used by Game mode so its answers count toward progress and the missed-questions pool
 window.recordAnswer=(id,ok)=>{const q=D.bank.find(b=>b.id===id);if(q)record(q,ok)};
