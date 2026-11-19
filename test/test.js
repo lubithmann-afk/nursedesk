@@ -42,8 +42,11 @@ const MD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','meds.js'),'
 const QD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,''));
 const qids=new Set(QD.bank.map(q=>q.id));
 console.assert(MD.meds.length>200,'many medications '+MD.meds.length);
-console.assert(MD.meds.every(m=>m.s.length+m.q.length>0),'every medication has a source');
-console.assert(MD.meds.every(m=>m.s.every(x=>MD.units[x.u]&&x.k.every(i=>MD.units[x.u].l[i]!==undefined))),'every excerpt resolves');
+const FK=['cls','moa','adm','se','labs','nsg'];
+console.assert(MD.meds.every(m=>FK.every(k=>m.f[k]&&m.f[k].g.length>0)),'every medication has all six sections filled');
+console.assert(MD.meds.every(m=>FK.every(k=>m.f[k].m.every(x=>MD.units[x.u]&&MD.units[x.u].l[x.i]!==undefined&&MD.units[x.u].l[x.i].trim().startsWith(x.x.slice(0,20))||MD.units[x.u].l[x.i].includes(x.x.slice(0,20))))),'every cited line is a real line of its slide or page');
+const dg=MD.meds.find(m=>m.name==='digoxin');
+console.assert(dg.f.labs.m.some(x=>/0\.5-2 ng/.test(x.x))||dg.f.labs.g.some(x=>/0\.5-2/.test(x)),'digoxin level present');
 console.assert(MD.meds.every(m=>m.q.every(id=>qids.has(id))),'every question link resolves');
 console.assert(MD.cats.flatMap(c=>c.c.flatMap(x=>x.m)).length===MD.meds.length,'every medication is in a category');
 console.log('medication data checks ran:',MD.meds.length,'medications');
