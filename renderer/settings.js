@@ -8,6 +8,7 @@ async function show(msg){
    <div class="row2" style="margin:0">${['system','light','dark'].map(t=>`<label class="row" style="margin:0;flex:1"><input type="radio" name="th" value="${t}" ${window.getTheme()===t?'checked':''}><div>${t[0].toUpperCase()+t.slice(1)}</div></label>`).join('')}</div></div>
   <div class="card"><h2>AI access</h2><p class="sub">Your Anthropic API key. It is stored encrypted on this PC and only sent to Anthropic.</p>
    <input type="password" id="key" placeholder="${s.hasKey?'Key saved (enter a new one to replace)':'sk-ant-…'}"><details style="margin-top:10px"><summary style="cursor:pointer">How do I get an API key?</summary>${window.keyHelp.steps()}<button id="kopen3">Open Anthropic Console</button></details><div style="margin-top:10px"><button class="p" id="sk">Save key</button> ${s.hasKey?'<button id="ck">Remove key</button>':''}</div></div>
+  <div class="card" id="ku"><h2>API key status and usage</h2><div id="kub"></div></div>
   <div class="card" id="loc"><h2>Built-in AI (optional, off by default)</h2><div id="locb"></div></div>
   <div class="card"><h2>Trusted web sources</h2><p class="sub">The AI checks your Library first (class slides, syllabus, ATI guide) and only searches these sites after you say yes, and it tells you exactly which page each fact came from. One domain per line.</p>
    <textarea class="f" id="dom" rows="9">${s.domains.join('\n')}</textarea><div style="margin-top:10px"><button class="p" id="sd">Save sources</button></div></div>
@@ -15,13 +16,35 @@ async function show(msg){
   <div class="card"><h2>About</h2><div class="cnt">NurseDesk version ${window.APP_VERSION||''}.</div></div>
   <div class="card"><h2>Updates</h2><div id="upd"></div></div>
   <div class="cnt" id="m">${msg||''}</div>`;
-  api.updState().then(paintUpd);paintLocal();
+  api.updState().then(paintUpd);paintLocal();paintUsage();
   document.querySelectorAll('input[name=th]').forEach(r=>r.onchange=()=>window.setTheme(r.value));
   const ko=document.getElementById('kopen3');if(ko)ko.onclick=window.keyHelp.open;
   document.getElementById('sk').onclick=async()=>{const v=document.getElementById('key').value.trim();if(v){await api.saveSettings({key:v});show('Key saved.')}};
   const ck=document.getElementById('ck');if(ck)ck.onclick=async()=>{await api.saveSettings({key:''});show('Key removed.')};
   document.getElementById('sd').onclick=async()=>{await api.saveSettings({domains:document.getElementById('dom').value.split('\n')});show('Sources saved.')};
   document.getElementById('iq').onclick=async()=>{const r=await api.importQuestions();show(r.error||`Added ${r.added} questions. Restart the app to see them in Practice.`)};
+}
+const fmt=n=>(+n||0).toLocaleString();const usd=n=>n==null?'':'$'+(+n).toFixed(n<1?3:2);
+async function paintUsage(note){
+  const e=document.getElementById('kub');if(!e)return;const [u,s]=await Promise.all([api.usageGet(),api.getSettings()]);
+  e.innerHTML=`<p class="sub">Anthropic does not tell an app when a key will expire or how much credit is left. Keys have no expiry date; they work until you delete or disable them or the account runs out of credit. This button tests the key right now (it costs a fraction of a cent).</p>
+   <div class="row2" style="margin:0"><button id="kchk" ${s.hasKey?'':'disabled'}>Check my key</button><span class="cnt" id="kres">${s.hasKey?'':'No key saved yet.'}</span></div>
+   <h3 style="margin:16px 0 4px;font-size:14px">Used by this app</h3>
+   <div class="cnt">This month (${esc(u.monthLabel)}): <b>${fmt(u.month.in)}</b> tokens in, <b>${fmt(u.month.out)}</b> out, ${fmt(u.month.calls)} requests${u.monthCost!=null?` · about <b>${usd(u.monthCost)}</b>`:''}<br>All time: ${fmt(u.all.in)} in, ${fmt(u.all.out)} out, ${fmt(u.all.calls)} requests${u.allCost!=null?` · about ${usd(u.allCost)}`:''}</div>
+   <h3 style="margin:16px 0 4px;font-size:14px">Cost and credit estimate (optional)</h3>
+   <div class="cnt" style="margin-bottom:6px">Enter the prices from Anthropic's pricing page (dollars per million tokens) to turn tokens into dollars. Then enter the credit you added to see a rough balance. This counts only what this app used; the Console shows your exact balance.</div>
+   <div class="row2" style="margin:0"><input type="text" id="pin" placeholder="Input $ per million" value="${u.prices?u.prices.in:''}" style="max-width:190px"><input type="text" id="pout" placeholder="Output $ per million" value="${u.prices?u.prices.out:''}" style="max-width:190px"><button id="psv">Save prices</button></div>
+   <div class="row2" style="margin:8px 0 0"><input type="text" id="cin" placeholder="Credit I added, in dollars" value="${u.credit?u.credit.amount:''}" style="max-width:190px"><button id="csv">Save credit (starts counting now)</button>${u.credit?'<button id="ccl">Clear</button>':''}</div>
+   <div class="cnt" style="margin-top:8px">${u.credit?(u.remaining!=null?`Estimated credit left: <b>${usd(u.remaining)}</b> of ${usd(u.credit.amount)} added on ${esc(u.credit.date)}.`:'Enter the prices above to see an estimate of the credit left.'):''} <a id="kbill" style="color:var(--acc);cursor:pointer">Open Console billing</a></div>
+   <div class="cnt" id="kum">${esc(note||'')}</div>`;
+  const R=document.getElementById('kres');
+  document.getElementById('kchk').onclick=async()=>{R.textContent='Checking…';const r=await api.checkKey();
+    const L=r.limits&&r.limits.requestsLimit?` Limits right now: ${r.limits.requestsRemaining} of ${r.limits.requestsLimit} requests left${r.limits.tokensLimit?`, ${fmt(r.limits.tokensRemaining)} of ${fmt(r.limits.tokensLimit)} tokens`:''} this minute.`:'';
+    R.textContent={valid:'✔ The key works.'+L,rejected:'✖ Anthropic rejected this key. It may be mistyped, deleted or disabled. Make a new one (see the steps in Ask AI).',no_credit:'⚠ The key is fine but the account is out of credit. Add credit in the Console billing page.',rate_limited:'⚠ The key works but you are being rate-limited right now. Try again in a minute.'+L,offline:'Could not reach Anthropic. Check your internet connection.',none:'No key saved yet.',error:'Anthropic returned an error: '+(r.error||'unknown')}[r.status]||'Unknown result.'};
+  document.getElementById('psv').onclick=async()=>{await api.usageSet({inP:document.getElementById('pin').value,outP:document.getElementById('pout').value});paintUsage('Prices saved.')};
+  document.getElementById('csv').onclick=async()=>{await api.usageSet({credit:document.getElementById('cin').value});paintUsage('Credit saved. Spending is counted from now.')};
+  const cc=document.getElementById('ccl');if(cc)cc.onclick=async()=>{await api.usageSet({credit:0});paintUsage('Cleared.')};
+  document.getElementById('kbill').onclick=()=>api.openExternal('https://platform.claude.com/settings/billing');
 }
 async function paintLocal(note){
   const e=document.getElementById('locb');if(!e)return;const s=await api.localState();

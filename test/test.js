@@ -165,5 +165,25 @@ fs.writeFileSync(gp,Buffer.alloc(60*1048576));let ie='';try{L4.importModel(gp)}c
 fs.writeFileSync(gp,Buffer.from('GGUFxx'));ie='';try{L4.importModel(gp)}catch(e){ie=e.message}console.assert(/too small/.test(ie),'a tiny file is rejected');fs.rmSync(gp);
 L.remove();console.assert(!L.state().installed&&!L.state().enabled,'delete removes the download and switches off');
 console.log('built-in AI tests ran');}
+// Key check + usage tracking
+{const {Usage}=require('../lib/usage'),os2=require('os');const U2=new Usage(path.join(fs.mkdtempSync(path.join(os2.tmpdir(),'nd-u-')),'u.json'));
+const nowd=new Date('2026-11-19T12:00:00Z');
+U2.add({input_tokens:1000,output_tokens:200},nowd);U2.add({input_tokens:500,output_tokens:100,cache_read_input_tokens:50},nowd);
+let sm=U2.summary(nowd);console.assert(sm.month.in===1550&&sm.month.out===300&&sm.month.calls===2&&sm.all.calls===2,'usage adds tokens exactly');
+console.assert(sm.monthCost===null&&sm.remaining===null,'no dollar figures until the student enters prices');
+U2.setPrices(3,15);U2.setCredit(10,nowd);sm=U2.summary(nowd);const exp=(1550*3+300*15)/1e6;
+console.assert(Math.abs(sm.monthCost-exp)<1e-9&&Math.abs(sm.remaining-(10-0))<1e-9,'cost is tokens x entered price; remaining counts spending after the credit was set');
+U2.add({input_tokens:1000000,output_tokens:0},new Date('2026-12-02T00:00:00Z'));sm=U2.summary(new Date('2026-12-02T00:00:00Z'));
+console.assert(sm.month.in===1000000&&sm.all.in===1001550&&Math.abs(sm.remaining-7)<1e-9,'months roll over and credit left drops by later spending');
+const AIK=require('../lib/ai');const mk=(st,body,h)=>async()=>({ok:st<300,status:st,json:async()=>body,headers:{get:n=>(h||{})[n]||null}});
+console.assert((await AIK.checkKey('k',mk(200,{usage:{input_tokens:8,output_tokens:1}},{'anthropic-ratelimit-requests-remaining':'49','anthropic-ratelimit-requests-limit':'50'}))).limits.requestsRemaining==='49','valid key reports its rate limits');
+console.assert((await AIK.checkKey('k',mk(401,{error:{message:'invalid x-api-key'}}))).status==='rejected','401 means rejected');
+console.assert((await AIK.checkKey('k',mk(400,{error:{message:'Your credit balance is too low to access the Anthropic API.'}}))).status==='no_credit','low credit is detected');
+console.assert((await AIK.checkKey('k',mk(429,{error:{message:'rate'}}))).status==='rate_limited','429 is rate limited');
+console.assert((await AIK.checkKey('k',async()=>{throw new Error('net')})).status==='offline'&&(await AIK.checkKey('')).status==='none','offline and no-key cases');
+let got=null;AIK.setUsageHook(u=>{got=u});const sf=global.fetch;global.fetch=async()=>({ok:true,status:200,json:async()=>({content:[{type:'text',text:'x'}],usage:{input_tokens:7,output_tokens:3}})});
+await AIK.complete({key:'k',system:'s',messages:[{role:'user',content:'q'}]});global.fetch=sf;AIK.setUsageHook(null);
+console.assert(got&&got.input_tokens===7&&got.output_tokens===3,'real requests report their token usage to the tracker');
+console.log('key status tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
