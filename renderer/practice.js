@@ -112,16 +112,20 @@ const isDeck=s=>/^Class slides/.test(s);
 const isWq=s=>/^Weekly quiz/.test(s);
 const sn=i=>{const s=D.src[i];if(isWq(s))return s.replace(/^Weekly quiz\s*[–-]\s*/,'');if(isDeck(s))return s.replace(/^Class slides\s*[–-]\s*/,'').replace(/^Class slides/,'Imported');return PT_NAMES[i]||s};
 const cnt=i=>D.bank.filter(q=>q.s===i).length;
-// "Done" = at least one question from that category answered. Green < 2 days ago, yellow 2-6 days, red 7+ days.
-const DAY=864e5,DONE_COL={g:'#2e9e5b',y:'#c99700',r:'#d64545'};
+// Status per category. A check (or X) only when EVERY question in it has been answered; "-" (yellow) when started but not finished.
+// Finished sets age: green check < 2 days since you last practiced it, yellow check 2-6 days, red X after 7+ days.
+const DAY=864e5,DONE_COL={g:'#2e9e5b',y:'#c99700',r:'#d64545',p:'#c99700'};
 const lastDone=qs=>{let t=0;qs.forEach(q=>{const a=P.a[q.id];if(a&&a.t>t)t=a.t});return t};
-const freshOf=t=>{if(!t)return null;const d=(Date.now()-t)/DAY;return d<2?'g':d<7?'y':'r'};
+const freshOf=t=>{const d=(Date.now()-t)/DAY;return d<2?'g':d<7?'y':'r'};
 const agoOf=t=>{const d=Math.floor((Date.now()-t)/DAY);return d<1?'today':d===1?'yesterday':d+' days ago'};
 const srcQs=v=>v==='wq'?D.bank.filter(q=>isWq(D.src[q.s])):D.bank.filter(q=>q.s===+v);
-function doneOpt(v,label,n){const t=lastDone(srcQs(v)),f=freshOf(t);
-  return `<option value="${v}"${f?` style="color:${DONE_COL[f]}"`:''}>${f?'✓ ':''}${esc(label)} (${n})${f?' · '+agoOf(t):''}</option>`}
-function paintDone(id){const S=$('#'+id),B=$('#dn_'+id);if(!S||!B)return;const t=lastDone(srcQs(S.value)),f=freshOf(t);
-  B.textContent=f?'✓ '+agoOf(t):'';B.style.color=f?DONE_COL[f]:'';B.title=f?'Last practiced '+agoOf(t):'Not done yet'}
+function statusOf(v){const qs=srcQs(v),n=qs.length,done=qs.filter(q=>P.a[q.id]).length;if(!done)return null;
+  const t=lastDone(qs);if(done<n)return{k:'p',mark:'–',text:done+' of '+n+' done · '+agoOf(t),t};
+  const k=freshOf(t);return{k,mark:k==='r'?'✗':'✓',text:agoOf(t),t}}
+function doneOpt(v,label,n){const st=statusOf(v);
+  return `<option value="${v}"${st?` style="color:${DONE_COL[st.k]}"`:''}>${st?st.mark+' ':''}${esc(label)} (${n})${st?' · '+st.text:''}</option>`}
+function paintDone(id){const S=$('#'+id),B=$('#dn_'+id);if(!S||!B)return;const st=statusOf(S.value);
+  B.textContent=st?st.mark+' '+st.text:'';B.style.color=st?DONE_COL[st.k]:'';B.title=st?(st.k==='p'?'Started but not finished':'Finished; last practiced '+st.text):'Not started'}
 function poolRows(){
   const pt=[],dk=[],wq=[];D.src.forEach((s,i)=>(isWq(s)?wq:isDeck(s)?dk:pt).push(i));
   const sel=(id,idx)=>`<select id="${id}" class="dd">${idx.map(i=>doneOpt(i,sn(i),cnt(i))).join('')}</select>`;
@@ -137,7 +141,7 @@ function home(){
   app.innerHTML=`<h1>NUR 283 Comp Practice Tests</h1>
   <p class="sub">${D.bank.length} questions from your six PDFs, with an NCLEX-style rationale after every answer.</p>
   ${sr?`<div class="card" style="border-color:var(--acc)"><h2>Unfinished test</h2><div class="cnt" style="margin-bottom:10px">${ans} of ${sr.run.length} answered. Pick up where you left off.</div><button class="p" style="width:100%" id="rsm">Resume test</button><button style="width:100%;margin-top:8px" id="dsc">Discard this test</button></div>`:''}
-  <div class="card"><h2>1. Choose a question pool</h2><div class="cnt" style="margin-bottom:8px">A check mark means you have practiced it: <span style="color:#2e9e5b">green</span> within 2 days, <span style="color:#c99700">yellow</span> after 2 days, <span style="color:#d64545">red</span> after a week without practicing it.</div>${poolRows()}</div>
+  <div class="card"><h2>1. Choose a question pool</h2><div class="cnt" style="margin-bottom:8px">Check marks need every question in the set answered: <span style="color:#2e9e5b">✓ green</span> within 2 days, <span style="color:#c99700">✓ yellow</span> after 2 days, <span style="color:#d64545">✗ red</span> after a week. <span style="color:#c99700">–</span> means started but not finished.</div>${poolRows()}</div>
   <div class="card"><h2>2. How many questions?</h2><div class="big" id="n">50</div>
    <input type="range" id="r" min="1" max="50" value="50">
    <label class="row" style="margin-top:12px"><input type="checkbox" id="sh" checked><div>Shuffle questions and answer order</div></label>
