@@ -24,14 +24,31 @@ function reindex() {
   idx.build(docs);
 }
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'deck';
+// ---- links from library decks to the student's original files (PowerPoint/PDF). The app keeps only the text of bundled decks,
+// so the first time the student opens an original they point to it once; the path is remembered.
+const LINKS = () => path.join(U(), 'original_links.json');
+const getLinks = () => rj(LINKS(), {});
+const setLink = (id, p) => { const l = getLinks(); l[id] = p; wj(LINKS(), l); };
+const OK_EXT = /\.(pptx?|pptm|ppsx|potx?|pdf)$/i;
+const fullSlug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function walkFiles(dir, depth, out) {
+  if (depth < 0 || out.length > 5000) return out;
+  let ents = []; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return out; }
+  for (const e of ents) {
+    if (e.name.startsWith('.') || e.name === 'node_modules') continue;
+    const f = path.join(dir, e.name);
+    if (e.isDirectory()) walkFiles(f, depth - 1, out); else if (OK_EXT.test(e.name)) out.push(f);
+  }
+  return out;
+}
 
 function settings() { const s = rj(path.join(U(), 'settings.json'), {}); return { domains: DEFAULT_DOMAINS, ...s }; }
 function getKey() { try { const f = path.join(U(), 'key.bin'); if (!fs.existsSync(f)) return ''; const b = fs.readFileSync(f); return safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(b) : b.toString('utf8'); } catch (e) { return ''; } }
 function setKey(k) { const f = path.join(U(), 'key.bin'); if (!k) { try { fs.unlinkSync(f); } catch (e) {} return; } fs.writeFileSync(f, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(k) : Buffer.from(k)); }
 
-ipcMain.handle('lib:list', () => decks().map(d => ({ id: d.id, name: d.name, slides: d.slides.length, kind: d.kind || 'pptx' })));
+ipcMain.handle('lib:list', () => { const L = getLinks(); return decks().map(d => ({ id: d.id, name: d.name, slides: d.slides.length, kind: d.kind || 'pptx', linked: !!(L[d.id] && fs.existsSync(L[d.id])) })); });
 ipcMain.handle('lib:deck', (_, id) => { const d = rj(path.join(LIB(), id, 'deck.json')); if (!d) return null; d.dir = path.join(LIB(), id, 'media'); return d; });
-ipcMain.handle('lib:remove', (_, id) => { fs.rmSync(path.join(LIB(), path.basename(id)), { recursive: true, force: true }); reindex(); return true; });
+ipcMain.handle('lib:remove', (_, id) => { id = path.basename(String(id)); fs.rmSync(path.join(LIB(), id), { recursive: true, force: true }); try { const l = getLinks(); delete l[id]; wj(LINKS(), l); } catch (e) {} reindex(); return true; });
 ipcMain.handle('lib:search', (_, q) => idx.search(q, 40).filter(r => r.deckId !== 'notes').slice(0, 25));
 ipcMain.handle('lib:import', async () => {
   const r = await dialog.showOpenDialog(win, { title: 'Import to library', filters: [{ name: 'PowerPoints and PDFs', extensions: ['pptx', 'pdf'] }], properties: ['openFile', 'multiSelections'] });
@@ -43,9 +60,39 @@ ipcMain.handle('lib:import', async () => {
       const isPdf = /\.pdf$/i.test(f);
       const slides = isPdf ? await parsePdf(fs.readFileSync(f)) : await parsePptx(fs.readFileSync(f), path.join(dir, 'media'), fs);
       wj(path.join(dir, 'deck.json'), isPdf ? { id, name, kind: 'pdf', slides } : { id, name, slides }); done.push(name);
+      try { setLink(id, f); } catch (e) {}
     } catch (e) { failed.push(path.basename(f) + ': ' + e.message); }
   }
   reindex(); return { done, failed };
+});
+ipcMain.handle('orig:open', async (_, rawId) => {
+  const id = path.basename(String(rawId)); const dk = rj(path.join(LIB(), id, 'deck.json'), null);
+  if (!dk) return { ok: false, error: 'That deck is not in your library.' };
+  let p = getLinks()[id];
+  if (!p || !fs.existsSync(p)) {                                   // not linked yet, or the file moved: ask once
+    const pdf = dk.kind === 'pdf';
+    const r = await dialog.showOpenDialog(win, { title: 'Find the original file for: ' + dk.name, filters: [{ name: pdf ? 'PDF' : 'PowerPoint', extensions: pdf ? ['pdf'] : ['pptx', 'ppt', 'pptm', 'ppsx'] }], properties: ['openFile'] });
+    if (!r.filePaths || !r.filePaths[0]) return { ok: false, cancelled: true };
+    p = r.filePaths[0];
+    if (!OK_EXT.test(p)) return { ok: false, error: 'That file type is not supported.' };
+    setLink(id, p);
+  }
+  const err = await shell.openPath(p);                              // opens with whatever program the student has for it
+  return err ? { ok: false, error: err } : { ok: true, name: path.basename(p) };
+});
+ipcMain.handle('orig:linkFolder', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Choose the folder that holds your original PowerPoints and PDFs', properties: ['openDirectory'] });
+  if (!r.filePaths || !r.filePaths[0]) return { cancelled: true };
+  const files = walkFiles(r.filePaths[0], 3, []);
+  const byId = new Map(), fulls = files.map(f => ({ f, s: fullSlug(path.basename(f, path.extname(f))) }));
+  files.forEach(f => byId.set(slug(path.basename(f, path.extname(f))), f));
+  let linked = 0; const missing = [], all = decks();
+  for (const d of all) {
+    let f = byId.get(d.id);                                          // same name as when it was first imported
+    if (!f) { const want = fullSlug(d.name); const hit = fulls.find(x => x.s.includes(want) && (d.kind === 'pdf') === /\.pdf$/i.test(x.f)); if (hit) f = hit.f; }
+    if (f) { setLink(d.id, f); linked++; } else missing.push(d.name);
+  }
+  return { linked, total: all.length, missing };
 });
 ipcMain.handle('q:extra', () => rj(path.join(U(), 'extra_questions.json'), []));
 ipcMain.handle('q:import', async () => {

@@ -22,5 +22,7 @@ contextBridge.exposeInMainWorld('api', {
   notesDelete: id => ipcRenderer.invoke('notes:delete', id),
   notesSetCategory: (id, c) => ipcRenderer.invoke('notes:setCategory', id, c),
   notesClear: () => ipcRenderer.invoke('notes:clear'),
+  openOriginal: id => ipcRenderer.invoke('orig:open', id),
+  linkOriginals: () => ipcRenderer.invoke('orig:linkFolder'),
   openExternal: u => ipcRenderer.invoke('open:ext', u),
 });
