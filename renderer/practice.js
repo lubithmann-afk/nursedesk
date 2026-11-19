@@ -1,14 +1,11 @@
 window.startPractice=async function(){
 
-const D=window.QD||{src:[],top:[],bank:[]};
+const D=window.QD;
 try{const ex=await window.api.extraQuestions();
  if(ex&&ex.length){D.src.push('Class slides (imported)');const si=D.src.length-1;
   ex.forEach((q,i)=>{let ti=D.top.indexOf(q.topic);if(ti<0){D.top.push(q.topic||'From class slides');ti=D.top.indexOf(q.topic||'From class slides')}
    D.bank.push({id:100000+i,t:ti,s:q.srcLabel?(D.src.indexOf(q.srcLabel)<0?(D.src.push(q.srcLabel),D.src.length-1):D.src.indexOf(q.srcLabel)):si,q:q.q,o:q.o,a:q.a,r:q.r||'No rationale provided.'})})}}catch(e){}
 const $=s=>document.querySelector(s);const app=$('#practice');
-if(!D.bank.length){app.innerHTML=`<h1>Practice</h1><div class="card"><h2>No questions yet</h2><p class="sub">NurseDesk does not include any Galen or ATI course material. Your class questions, slides and quiz banks come in a <b>course pack</b>, a single .zip file from the classmate who shared the app with you. You only do this once.</p><button class="p" id="ipk">Import a course pack…</button><div class="cnt" id="ipm" style="margin-top:8px"></div><p class="cnt" style="margin-top:14px">You can also import your own PowerPoints and PDFs in the Library tab, or question files in Settings.</p></div>`;
-  $('#ipk').onclick=async()=>{const r=await window.api.packImport();if(r.cancelled)return;if(!r.ok){$('#ipm').textContent=r.error;return}location.reload()};return}
-
 const L='ABCDEFGH';
 let st={};
 let P={a:{}};let saveState='';let dbDoc=null;let saving=false,dirty=false;

@@ -2,16 +2,3 @@ node_modules
 dist
 __pycache__
 *.pyc
-
-# Course material derived from Galen / ATI: private, never committed. Shipped to classmates only as a course pack (tools/pack).
-content/
-data/seed/
-data/questions.js
-tools/bank/b1.py
-tools/bank/b2.py
-tools/bank/b3.py
-tools/bank/b4.py
-tools/bank/bank*.json
-tools/bank/quiz.html
-tools/quiz/*.json
-tools/slides/*.py

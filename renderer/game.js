@@ -16,7 +16,7 @@ const best=()=>ls.get('nd_game_best',{});
 const hist=()=>{const p=ls.get('nur283_progress',null);return p&&p.a?p.a:{}};
 // ---- menu
 function menu(){
-  clearTimers();S=null;if(!window.QD){root().innerHTML='<div class="gm"><h1>Game</h1><p class="sub">The game needs questions. Import a course pack in Settings to play.</p></div>';return}
+  clearTimers();S=null;if(!window.QD){root().innerHTML='<div class="gm"><h1>Game</h1></div>';return}
   cats=G.categories(window.QD,window.MEDS);if(!menuKey||!cats.find(c=>c.key===menuKey))menuKey='all';
   const groups=[...new Set(cats.map(c=>c.group))],b=best();
   root().innerHTML=`<div class="gm"><h1>The NCLEX Ladder</h1><div class="g-tag">15 questions. Each one is worth more. Don’t lose it all.</div>

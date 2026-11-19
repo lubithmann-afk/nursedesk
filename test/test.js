@@ -37,21 +37,9 @@ global.fetch=async(u,o)=>{const b=JSON.parse(o.body);
 const r3=await ai.ask([{role:'user',content:'yes'}],{key:'k',domains:ai.DEFAULT_DOMAINS,searchSlides:()=>[],allowWeb:true});
 console.assert(r3.askWeb===false,'no ask flag when approved');
 console.log('approval tests ran');
-// The course pack (content/NurseDesk-CoursePack.zip) is private and not in git. Tests of the course data run only when it is present.
-let FULL=null;
-try{const JZ=require('jszip');const z=await JZ.loadAsync(fs.readFileSync(path.join(__dirname,'..','content','NurseDesk-CoursePack.zip')));const rdp=async n=>JSON.parse(await z.file(n).async('string'));
- FULL={QD:await rdp('questions.json'),mp:await rdp('meds_cited.json'),gl:await rdp('glossary_class.json'),decks:[]};
- for(const n of Object.keys(z.files))if(/^seed\/.*deck\.json$/.test(n))FULL.decks.push(JSON.parse(await z.file(n).async('string')))}catch(e){}
-console.log(FULL?'course pack found: running course-data tests':'no course pack in content/: course-data tests skipped');
-const mergeMeds=(M,mp)=>{M.decks=mp.decks;M.units=mp.units;M.suffix=mp.suffix;M.meds.forEach(m=>{const c=mp.cited[m.name];if(c)for(const k in c)m.f[k].m=c[k];if(mp.q[m.name])m.q=mp.q[m.name]});return M};
-// Nothing copied from Galen / ATI is bundled with the app.
-console.assert(!fs.existsSync(path.join(__dirname,'..','data','seed'))&&!fs.existsSync(path.join(__dirname,'..','data','questions.js')),'no course decks or question banks are bundled');
-const MDb=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','meds.js'),'utf8').replace(/^window\.MEDS=/,'').replace(/;$/,''));
-console.assert(MDb.meds.length>200&&MDb.meds.every(m=>m.q.length===0&&['cls','moa','adm','se','labs','nsg'].every(k=>m.f[k].m.length===0&&m.f[k].g.length>0))&&!Object.keys(MDb.units).length,'bundled medications have general reference only, all six sections filled');
-const GLb=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','glossary.js'),'utf8').replace(/^window\.GLOSSARY=/,'').replace(/;$/,''));
-console.assert(GLb.terms.length>600&&GLb.terms.every(x=>!x.m)&&new Set(GLb.terms.map(x=>x.t.toLowerCase())).size===GLb.terms.length,'bundled glossary has only general terms, none duplicated');
 // Medications data: every medication points at real library text or real questions, and every excerpt resolves.
-if(FULL){const MD=mergeMeds(JSON.parse(JSON.stringify(MDb)),FULL.mp);const QD=FULL.QD;
+const MD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','meds.js'),'utf8').replace(/^window\.MEDS=/,'').replace(/;$/,''));
+const QD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,''));
 const qids=new Set(QD.bank.map(q=>q.id));
 console.assert(MD.meds.length>200,'many medications '+MD.meds.length);
 const FK=['cls','moa','adm','se','labs','nsg'];
@@ -61,7 +49,7 @@ const dg=MD.meds.find(m=>m.name==='digoxin');
 console.assert(dg.f.labs.m.some(x=>/0\.5-2 ng/.test(x.x))||dg.f.labs.g.some(x=>/0\.5-2/.test(x)),'digoxin level present');
 console.assert(MD.meds.every(m=>m.q.every(id=>qids.has(id))),'every question link resolves');
 console.assert(MD.cats.flatMap(c=>c.c.flatMap(x=>x.m)).length===MD.meds.length,'every medication is in a category');
-console.log('medication data checks ran:',MD.meds.length,'medications');}
+console.log('medication data checks ran:',MD.meds.length,'medications');
 // Saved web notes: store rules, the SAVE block (honoured only after web approval), cited pages with quotes, and reuse by search.
 const {Notes,CATEGORIES}=require('../lib/notes');
 const nf=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'nd-notes-')),'n.json');const store=new Notes(nf);
@@ -93,8 +81,8 @@ console.assert(w3.usedWeb===true&&w3.sources.length===1&&w3.save,'cited pages al
 console.log('saved web notes tests ran');
 // Game mode rules: 15 climbing questions, safe havens, walk-away, lifelines, categories.
 const GL=require('../renderer/gamelogic.js');
-const QDg=FULL?FULL.QD:null,MDg=FULL?mergeMeds(JSON.parse(JSON.stringify(MDb)),FULL.mp):null;
-if(FULL){
+const QDg=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,''));
+const MDg=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','meds.js'),'utf8').replace(/^window\.MEDS=/,'').replace(/;$/,''));
 let seed=11;const grng=()=>(seed=(seed*1664525+1013904223)%4294967296)/4294967296;
 const gcats=GL.categories(QDg,MDg);
 console.assert(gcats.length>30&&['Test topics','Practice tests','Weekly quizzes','Medication categories'].every(g=>gcats.some(c=>c.group===g)),'menu has test and medication categories');
@@ -114,7 +102,6 @@ console.assert(GL.payoutWalk(0)===0&&GL.payoutWalk(6)===2000&&GL.LADDER[14]===10
 const hid=new Set(GL.fifty(2,new Set(),grng));console.assert(hid.size===2&&!hid.has(2),'50:50 removes two wrong answers');
 const au=GL.audience(2,3,hid,grng);console.assert(au.reduce((a,b)=>a+b)===100&&[...hid].every(i=>au[i]===0),'audience adds to 100 and ignores removed answers');
 const fr=GL.friend(1,0,new Set(),grng);console.assert(fr.pick>=0&&fr.pick<4,'friend picks an answer');
-}
 console.log('game mode tests ran');
 // Challenge-mode coach: the first call must not reveal the answer; the second gets the key, rationale and the student's reasoning.
 const {coach,buildPrompt}=require('../lib/coach');
@@ -130,20 +117,20 @@ let cb=null;global.fetch=async(u,o)=>{cb={h:o.headers,b:JSON.parse(o.body)};retu
 const ct=await coach({...cq,stage:'prompt'},{key:'k-test'});
 console.assert(ct==='Why that choice?'&&cb.h['x-api-key']==='k-test'&&!cb.b.tools&&cb.b.max_tokens<=500,'coach makes one plain call with no tools');
 let nk='';try{await coach({...cq,stage:'prompt'},{key:''})}catch(e){nk=String(e.message)}console.assert(/No API key/.test(nk),'coach needs a key');
-if(FULL){const allc=GL.categories(QDg,MDg,{all:true});
-console.assert(allc[0].own.length===QDg.bank.length&&allc[0].own.some(q=>Array.isArray(q.a)),'challenge categories include select-all questions');}
+const allc=GL.categories(QDg,MDg,{all:true});
+console.assert(allc[0].own.length===QDg.bank.length&&allc[0].own.some(q=>Array.isArray(q.a)),'challenge categories include select-all questions');
 console.log('challenge coach tests ran');
 // Glossary: unique terms, valid categories, and every class-material entry cites a real line in a bundled deck.
-if(FULL){const GLD={cats:GLb.cats,terms:GLb.terms.concat(FULL.gl.terms)};
+const GLD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','glossary.js'),'utf8').replace(/^window\.GLOSSARY=/,'').replace(/;$/,''));
 console.assert(GLD.terms.length>600&&new Set(GLD.terms.map(x=>x.t.toLowerCase())).size===GLD.terms.length,'many glossary terms, none duplicated');
 console.assert(GLD.terms.every(x=>x.d&&x.d.length>=3&&GLD.cats.includes(x.c)),'every term has a definition and a valid category');
 const gnorm=s=>String(s).replace(/’/g,"'").replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
-const gdecks=new Map();FULL.decks.forEach(d=>gdecks.set(d.id,d));
+const gdecks=new Map();for(const f of fs.readdirSync(path.join(__dirname,'..','data','seed'))){const d=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','seed',f,'deck.json'),'utf8'));gdecks.set(d.id,d)}
 const gmat=GLD.terms.filter(x=>x.m);
 console.assert(gmat.length>50&&gmat.every(x=>{const d=gdecks.get(x.m.d);const sl=d&&d.slides.find(s=>s.n===x.m.n);return sl&&sl.text.some(l=>gnorm(l).includes(gnorm(x.m.l).slice(0,60)))}),'every class-material glossary entry cites a real slide or page line');
 console.assert(gmat.every(x=>{const d=gdecks.get(x.m.d);const sl=d.slides.find(s=>s.n===x.m.n);const blob=gnorm(sl.text.join(' ')).toLowerCase();return gnorm(x.d).toLowerCase().replace(/[.)]+$/,'').split(' ').slice(0,4).every(w=>blob.includes(w.replace(/[.,;]/g,'')))}),'class-material definitions come from the cited slide text');
 console.assert(['Aphasia','-itis','Hemiplegia','Goodell sign'].every(k=>GLD.terms.some(x=>x.t.toLowerCase()===k.toLowerCase())),'key terms and word parts are present');
-console.log('glossary tests ran:',GLD.terms.length,'terms,',gmat.length,'from class materials');}
+console.log('glossary tests ran:',GLD.terms.length,'terms,',gmat.length,'from class materials');
 // Built-in AI (optional): off until the disclaimer is accepted; installs from downloads; labels every answer; offline fallback quotes materials.
 {const LC=require('../lib/local'),JZ=require('jszip'),os=require('os');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nd-local-'));

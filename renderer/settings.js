@@ -8,30 +8,21 @@ async function show(msg){
    <div class="row2" style="margin:0">${['system','light','dark'].map(t=>`<label class="row" style="margin:0;flex:1"><input type="radio" name="th" value="${t}" ${window.getTheme()===t?'checked':''}><div>${t[0].toUpperCase()+t.slice(1)}</div></label>`).join('')}</div></div>
   <div class="card"><h2>AI access</h2><p class="sub">Your Anthropic API key. It is stored encrypted on this PC and only sent to Anthropic.</p>
    <input type="password" id="key" placeholder="${s.hasKey?'Key saved (enter a new one to replace)':'sk-ant-…'}"><details style="margin-top:10px"><summary style="cursor:pointer">How do I get an API key?</summary>${window.keyHelp.steps()}<button id="kopen3">Open Anthropic Console</button></details><div style="margin-top:10px"><button class="p" id="sk">Save key</button> ${s.hasKey?'<button id="ck">Remove key</button>':''}</div></div>
-  <div class="card" id="pk"><h2>Course pack</h2><div id="pkb"></div></div>
   <div class="card" id="ku"><h2>API key status and usage</h2><div id="kub"></div></div>
   <div class="card" id="loc"><h2>Built-in AI (optional, off by default)</h2><div id="locb"></div></div>
   <div class="card"><h2>Trusted web sources</h2><p class="sub">The AI checks your Library first (class slides, syllabus, ATI guide) and only searches these sites after you say yes, and it tells you exactly which page each fact came from. One domain per line.</p>
    <textarea class="f" id="dom" rows="9">${s.domains.join('\n')}</textarea><div style="margin-top:10px"><button class="p" id="sd">Save sources</button></div></div>
   <div class="card"><h2>Add practice questions</h2><p class="sub">Import a question file (JSON) to add questions to Practice.</p><button id="iq">Import questions</button></div>
-  <div class="card"><h2>About</h2><div class="cnt">NurseDesk version ${window.APP_VERSION||''}. An independent study tool, not affiliated with Galen College of Nursing or ATI. It includes no course material of its own. The medication, glossary and AI content is a study aid, not clinical advice: do not use it for patient care or doses.</div></div>
+  <div class="card"><h2>About</h2><div class="cnt">NurseDesk version ${window.APP_VERSION||''}.</div></div>
   <div class="card"><h2>Updates</h2><div id="upd"></div></div>
   <div class="cnt" id="m">${msg||''}</div>`;
-  api.updState().then(paintUpd);paintLocal();paintPack();paintUsage();
+  api.updState().then(paintUpd);paintLocal();paintUsage();
   document.querySelectorAll('input[name=th]').forEach(r=>r.onchange=()=>window.setTheme(r.value));
   const ko=document.getElementById('kopen3');if(ko)ko.onclick=window.keyHelp.open;
   document.getElementById('sk').onclick=async()=>{const v=document.getElementById('key').value.trim();if(v){await api.saveSettings({key:v});show('Key saved.')}};
   const ck=document.getElementById('ck');if(ck)ck.onclick=async()=>{await api.saveSettings({key:''});show('Key removed.')};
   document.getElementById('sd').onclick=async()=>{await api.saveSettings({domains:document.getElementById('dom').value.split('\n')});show('Sources saved.')};
   document.getElementById('iq').onclick=async()=>{const r=await api.importQuestions();show(r.error||`Added ${r.added} questions. Restart the app to see them in Practice.`)};
-}
-async function paintPack(note){
-  const e=document.getElementById('pkb');if(!e)return;const i=await api.packInfo();
-  e.innerHTML=(i?`<p class="sub"><b>${esc(i.name||'Course pack')}</b> is loaded: ${i.questions} questions, ${i.decks} library decks, ${i.citedLines} cited medication lines (made ${esc(i.created||'')}).</p><div class="row2" style="margin:0"><button id="pkn">Replace with another pack…</button><button id="pkr">Remove the pack</button></div>`
-   :`<p class="sub">NurseDesk ships without any Galen or ATI material. A course pack is one .zip file with your class questions, slides and quiz banks, shared by a classmate. Import it once to unlock Practice, the Game, Challenge mode and the cited lines in Medications.</p><button class="p" id="pkn">Import a course pack…</button>`)
-   +`<div class="cnt" id="pkm" style="margin-top:8px">${esc(note||'')}</div><div class="cnt" style="margin-top:6px">Only share a pack with classmates who are entitled to the same course materials, and check your school's policy first.</div>`;
-  const n=document.getElementById('pkn');if(n)n.onclick=async()=>{const r=await api.packImport();if(r.cancelled)return;if(!r.ok){paintPack(r.error);return}location.reload()};
-  const rm=document.getElementById('pkr');if(rm)rm.onclick=async()=>{await api.packRemove();location.reload()};
 }
 const fmt=n=>(+n||0).toLocaleString();const usd=n=>n==null?'':'$'+(+n).toFixed(n<1?3:2);
 async function paintUsage(note){
