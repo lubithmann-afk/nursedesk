@@ -188,6 +188,13 @@ console.assert((await AIK.checkKey('k',async()=>{throw new Error('net')})).statu
 let got=null;AIK.setUsageHook(u=>{got=u});const sf=global.fetch;global.fetch=async()=>({ok:true,status:200,json:async()=>({content:[{type:'text',text:'x'}],usage:{input_tokens:7,output_tokens:3}})});
 await AIK.complete({key:'k',system:'s',messages:[{role:'user',content:'q'}]});global.fetch=sf;AIK.setUsageHook(null);
 console.assert(got&&got.input_tokens===7&&got.output_tokens===3,'real requests report their token usage to the tracker');
+{const T=AIK.trimCut;
+console.assert(T('You did well. **Strong:** good elimination.\n\n**Gap:')==='You did well. **Strong:** good elimination.','a dangling heading is removed');
+console.assert(T('First point is long enough to count here. Second point is cut off mid')==='First point is long enough to count here. …','a half sentence is dropped and marked');
+console.assert(T('Complete sentence.')==='Complete sentence.'&&!/…/.test(T('**Bold** done.')),'complete text is untouched');
+let n=0;const sf2=global.fetch;global.fetch=async(u,o)=>{n++;const b=JSON.parse(o.body);return{ok:true,status:200,json:async()=>n===1?{stop_reason:'max_tokens',content:[{type:'text',text:'Cut **Gap:'}],usage:{}}:{stop_reason:'end_turn',content:[{type:'text',text:'Full answer, '+b.max_tokens+'.'}],usage:{}}}};
+const rr=await AIK.complete({key:'k',system:'s',messages:[{role:'user',content:'q'}],maxTokens:500});global.fetch=sf2;
+console.assert(n===2&&/Full answer, 1500\./.test(rr),'a reply that hit the limit is retried once with more room');}
 console.log('key status tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
