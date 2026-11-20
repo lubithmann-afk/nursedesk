@@ -82,9 +82,10 @@ function draw(){
     <div class="nav">${C.i>0?'<button id="chpv">← Previous</button>':'<span></span>'}<button class="p" id="chnx">${C.i===n-1?'See results':'Next question'}</button></div>`}
   app().innerHTML=`<div class="top"><span>Challenge · Question ${C.i+1} of ${n}</span><span>${C.qs.filter(x=>x.done&&x.ok).length} correct</span></div>
    <div class="bar"><i style="width:${(C.i+(rev?1:0))/n*100}%"></i></div>
-   <div class="card"><div class="q" style="white-space:pre-line">${esc(q.q)}</div>${multi?'<div class="cnt" style="margin:-6px 0 10px">Select all that apply</div>':''}${opts}${body}<div class="src">${esc(window.QD.top[q.t])}</div></div>`;
+   ${t.stage==='choose'&&window.assist?`<div style="margin:0 0 8px">${window.assist.button()}</div>`:''}<div class="card"><div class="q" style="white-space:pre-line">${window.assist&&window.assist.on?window.assist.html(q.q):esc(q.q)}</div>${window.assist&&window.assist.on?window.assist.legend():''}${multi?'<div class="cnt" style="margin:-6px 0 10px">Select all that apply</div>':''}${opts}${body}<div class="src">${esc(window.QD.top[q.t])}</div></div>`;
   app().querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;if(multi){const i=t.sel.indexOf(k);i<0?t.sel.push(k):t.sel.splice(i,1)}else t.sel=[k];draw()});
   const on=(id,fn)=>{const e=$(id);if(e)e.onclick=fn};
+  on('#asb',()=>{window.assist.set(!window.assist.on);draw()});
   on('#chlk',()=>lockIn(t));on('#chsub',()=>reason(t,false));on('#chg',()=>reason(t,true));on('#chnx',next);on('#chmr',()=>{window.misreadToggle(t.q.id);draw()});on('#chpv',()=>{armed=false;C.i--;draw();window.scrollTo(0,0)});
   on('#chq',()=>{if(armed){armed=false;setup()}else{armed=true;draw()}});
   const fu=$('#chfu');if(fu){fu.oninput=()=>{t.fu=fu.value};fu.onkeydown=e=>{if(e.key==='Enter')followup(t,fu.value)};on('#chfs',()=>followup(t,fu.value));app().querySelectorAll('.fuq').forEach(b=>b.onclick=()=>followup(t,b.dataset.q))}

@@ -198,7 +198,8 @@ function show(){
   const ans=t.pick!==null;const multi=Array.isArray(q.a);
   app.innerHTML=`<div class="top"><span>Question ${st.i+1} of ${n}</span><span>${st.run.filter(x=>x.pick!==null&&isOk(x)).length} correct</span></div>
   <div class="bar"><i style="width:${(st.i+(ans?1:0))/n*100}%"></i></div>
-  <div class="card"><div class="q">${esc(q.q)}</div>
+  ${!ans&&window.assist?`<div style="margin:0 0 8px">${window.assist.button()}</div>`:''}
+  <div class="card"><div class="q">${window.assist&&window.assist.on?window.assist.html(q.q):esc(q.q)}</div>${window.assist&&window.assist.on?window.assist.legend():''}
   ${multi?'<div class="cnt" style="margin:-6px 0 10px">Select all that apply</div>':''}${t.idx.map((oi,k)=>{let c='',mk='';
     if(multi){const chosen=ans?t.pick.includes(k):(t.sel||[]).includes(k);const corr=q.a.includes(oi);
       if(ans){if(corr)c='ok';else if(chosen)c='bad';else c='dim';mk=chosen?'☑':'☐'}else{c=chosen?'sel':'';mk=chosen?'☑':'☐'}
@@ -211,6 +212,7 @@ function show(){
     if(multi){t.sel=t.sel||[];const i=t.sel.indexOf(k);if(i<0)t.sel.push(k);else t.sel.splice(i,1);show();return}
     t.pick=k;const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
   wireChat(t);
+  const asb=$('#asb');if(asb)asb.onclick=()=>{window.assist.set(!window.assist.on);show()};
   const mrd=$('#mrd');if(mrd)mrd.onclick=()=>{mrToggle(q.id);show()};
   $('#nx').onclick=()=>{if(multi&&!ans){t.pick=(t.sel||[]).slice().sort((a,b)=>a-b);const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});return}
     if(st.i===n-1)results();else{st.i++;saveRun();show();window.scrollTo(0,0)}};

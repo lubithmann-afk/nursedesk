@@ -219,5 +219,15 @@ console.assert(JSON.stringify(hit)===JSON.stringify(['BP','SpO2','IV','PRN','CBC
 console.assert(AB.split('x I&O y')[1].m==='Intake and output'&&AB.split('(MI)')[1].x==='MI'&&AB.split('AIDS')[0].x==='AIDS','handles symbols, brackets and whole words');
 console.assert(AB.split('plain words only').length===1,'plain text is left alone');
 console.log('abbreviation tests ran');}
+// Assist highlighter: marks key words in the question text only, never changes the text
+{const AS=require('../renderer/assist.js');AS.setMeds(['heparin','ibuprofen']);AS.setTerms(['meningitis']);
+const q='A client 2 days post-op reports sudden chest pain and a BP of 90/60 mmHg & bacterial meningitis <b>. Which action should the nurse take FIRST? The client takes heparin.';
+const sp=AS.split(q,{});const by=k=>sp.filter(p=>p.k===k).map(p=>p.x);
+console.assert(sp.map(p=>p.x).join('')===q,'highlighting never changes the question text');
+console.assert(by('a').includes('FIRST')&&by('c').includes('sudden')&&by('d').includes('heparin')&&by('b').includes('chest pain')&&by('b').includes('90/60 mmHg')&&by('b').includes('meningitis')&&by('b').some(x=>/2 days/.test(x)),'finds what is asked, red flags, medications, findings and numbers');
+const h=AS.html(q,{});console.assert(!/<b>/.test(h)&&/&lt;b&gt;/.test(h)&&/&amp;/.test(h)&&(h.match(/<mark /g)||[]).length>=6,'output is escaped HTML with marks');
+console.assert(AS.split('Which of the following is true?',{}).every(p=>!p.k),'plain generic stems get no highlights');
+console.assert(AS.split('Give it NOT at bedtime',{})[1].k==='a','the word NOT is flagged');
+console.log('assist tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
