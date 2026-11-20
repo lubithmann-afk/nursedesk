@@ -210,5 +210,14 @@ let n=0;const sf2=global.fetch;global.fetch=async(u,o)=>{n++;const b=JSON.parse(
 const rr=await AIK.complete({key:'k',system:'s',messages:[{role:'user',content:'q'}],maxTokens:500});global.fetch=sf2;
 console.assert(n===2&&/Full answer, 1500\./.test(rr),'a reply that hit the limit is retried once with more room');}
 console.log('key status tests ran');}
+// Abbreviation hints: dictionary and matcher
+{const AB=require('../renderer/abbr.js');
+console.assert(Object.keys(AB.ABBR).length>250&&Object.values(AB.ABBR).every(v=>v&&v.length>3),'abbreviation list is large and every entry has a meaning');
+const sp=AB.split('Check BP and SpO2, give IV PRN. Not PIVOT or CBCs or iv.');
+const hit=sp.filter(p=>p.t==='abbr').map(p=>p.x);
+console.assert(JSON.stringify(hit)===JSON.stringify(['BP','SpO2','IV','PRN','CBCs']),'matches whole abbreviations (and simple plurals) only, case-sensitive: '+hit);
+console.assert(AB.split('x I&O y')[1].m==='Intake and output'&&AB.split('(MI)')[1].x==='MI'&&AB.split('AIDS')[0].x==='AIDS','handles symbols, brackets and whole words');
+console.assert(AB.split('plain words only').length===1,'plain text is left alone');
+console.log('abbreviation tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();

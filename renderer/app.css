@@ -72,3 +72,8 @@ ol.kh{margin:8px 0 8px 18px;padding:0;line-height:1.5}ol.kh li{margin:6px 0}ol.k
 @keyframes hdraw{0%{stroke-dashoffset:100}55%,100%{stroke-dashoffset:0}}
 @keyframes hpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 @media (prefers-reduced-motion:reduce){#home .w,.hlogo,.hlogo .hbeat{animation:none}.hlogo .hbeat{stroke-dashoffset:0}}
+
+/* abbreviation hints */
+abbr.ab{text-decoration:underline dotted;text-decoration-color:color-mix(in srgb,var(--mut) 55%,transparent);text-underline-offset:2px;cursor:help}
+#abtip{position:fixed;z-index:100;max-width:320px;background:#1d2433;color:#fff;padding:6px 9px;border-radius:8px;font-size:13px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:none;display:none}
+:root[data-theme=dark] #abtip{background:#e8ebf1;color:#12151b}
