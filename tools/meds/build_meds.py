@@ -7,6 +7,7 @@ sys.path.insert(0,HERE)
 from lexicon import L
 from reference import R,D
 from extras import EX
+from core import CORE
 SKIP_DECKS={'nur-283-syllabus-winter-2026'}
 norm=lambda t:t.replace('’',"'").replace('‘',"'").replace('–','-').replace(' ',' ')
 
@@ -82,6 +83,7 @@ F_SE=re.compile(r'side effect|adverse|toxic|overdose|can cause|causes\b|may caus
 F_ADM=re.compile(r'\b(give|given|administer|administration|take|taken|hold|push|infus|inject|route|dose|dosing|oral|IV|IM|subcutaneous|sublingual|topical|inhal|with food|empty stomach|before meals|after meals|bedtime|morning|crush|chew|Z-track|contraindicated|filter|pump|never)\b',re.I)
 F_NSG=re.compile(r'\b(monitor|assess|teach|instruct|educat|report|avoid|encourage|check|observe|notify|antidote|precaution|ensure|counsel|expect|should|must|do not|don.t)\b',re.I)
 F_CLS=re.compile(r'\b(class|classification|category|used (?:to|for)|indicated|treats?|antihypertensive|antibiotic|anticoagulant|diuretic|analgesic|antidepressant|antipsychotic|anticonvulsant|inhibitors?|blockers?|agonists?|antagonists?)\b',re.I)
+MOA_START=re.compile(r'^(?:inhibit|block|increas|decreas|improv|stimulat|relax|bind|dilat|constrict|reduc|prevent|promot|lower|rais|enhanc|suppress|activat|convert|replac|neutraliz|destroy|kill|slow|speed|act|work|compet|mimic|caus|produc|interfer|stop|alter|decreas|reabsorb)(?:s|es|ing)?\b|^(?:a |an |the )?(?:competitive |direct |selective )?(?:inhibitor|blocker|agonist|antagonist)\b',re.I)
 def classify(line,first,m_has=lambda t:True):
     """first = this is the line that names the drug (usually a heading)."""
     t=line.strip(' -●○•▪–\t')
@@ -94,7 +96,7 @@ def classify(line,first,m_has=lambda t:True):
     if F_SE.search(t) and not re.match(r'^(?:monitor|assess|teach|report|notify|instruct|check|observe)',t,re.I): return 'se'
     if re.match(r'^(?:monitor|assess|teach|instruct|educat|report|avoid|encourage|check|observe|notify|ensure|counsel)',t,re.I): return 'nsg'
     if F_ADM.search(t): return 'adm'
-    if F_MOA.search(t): return 'moa'
+    if F_MOA.search(t) and MOA_START.match(t): return 'moa'
     if F_NSG.search(t): return 'nsg'
     if F_CLS.search(t) and m_has(t): return 'cls'
     return None
@@ -154,12 +156,15 @@ out=[]
 for m in keep:
     m['i']=len(out)
     extra=m['name'] in EX and not (m['slides'] or m['q'])
-    r=EX[m['name']] if extra else R[m['cls']];d={} if extra else D.get(m['name'],{})
+    own=EX.get(m['name']) if extra else CORE.get(m['name'])        # text written for this one drug
+    r=own or R[m['cls']];d={} if own else D.get(m['name'],{})
     f={}
     for k in ('cls','moa','adm','se','labs','nsg'):
         gk='admin' if k=='adm' else k
-        g=([r['cl']] if k=='cls' else [x for x in r[gk].split('|') if x])+[x for x in d.get(gk,'').split('|') if x]
-        f[k]={'m':m['f'][k],'g':g}
+        grp=[r['cl']] if k=='cls' else [x for x in r[gk].split('|') if x]       # text for the whole drug group
+        spec=[x for x in d.get(gk,'').split('|') if x]                         # text written for this one drug
+        f[k]={'m':m['f'][k],'g':spec or grp}
+        if spec and grp and spec!=grp:f[k]['c']=grp                              # keep the group text separately, shown as "about the whole group"
     ap=sorted({int(x['u'].split(':')[1]) for x in m['slides'] if x['u'].split(':')[0]==ATI_ID})
     g=bool(m['q']) or any(x['u'].split(':')[0]!=ATI_ID for x in m['slides'])       # found in Galen material: a class slide or a Galen practice/quiz question
     out.append({'i':m['i'],'name':m['name'],'brands':m['brands'],'cat':m['cat'],'cls':m['cls'],'f':f,'q':m['q'],'g':g,'s':any(x['u'].split(':')[0]!=ATI_ID for x in m['slides']),'a':bool(ap),'ap':ap})

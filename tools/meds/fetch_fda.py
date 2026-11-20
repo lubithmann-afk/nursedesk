@@ -41,7 +41,10 @@ def best(name):
         res=[r for r in api(q).get('results',[]) if r.get('set_id')]
         # prefer single-ingredient labels whose generic name is the drug itself
         ok=[r for r in res if any(n.lower() in g.lower() and len(g)<len(n)+25 for g in r.get('openfda',{}).get('generic_name',[]))] or res
-        if ok:return max(ok,key=score)
+        single=[r for r in ok if len(r.get('openfda',{}).get('substance_name',[]))==1] or ok
+        if single:
+            b=max(single,key=score);b=dict(b);b['_routes']=sorted({x for r in single for x in r.get('openfda',{}).get('route',[])})
+            return b
     return None
 DOSE=re.compile(r'\b\d+(?:[.,]\d+)?\s?(?:mg|mcg|µg|g|mL|ml|units?|IU|mEq|mmol|mg/kg|mcg/kg|g/kg|L|kg)\b|\b\d+\s?(?:to|-)\s?\d+\s?(?:mg|mcg|mL|units?)\b',re.I)
 def tidy(t):
@@ -80,18 +83,23 @@ def first(r,*ks):
 def extract(r):
     o=r.get('openfda',{});d={}
     epc=[re.sub(r'\s*\[.*?\]','',x) for x in o.get('pharm_class_epc',[])][:2];moa=[re.sub(r'\s*\[.*?\]','',x) for x in o.get('pharm_class_moa',[])][:3];pe=[re.sub(r'\s*\[.*?\]','',x) for x in o.get('pharm_class_pe',[])][:3]
-    d['cls']=[x for x in [('FDA drug class: '+', '.join(epc)) if epc else '',pick(first(r,'indications_and_usage'),330,2)] if x]
+    ind=pick(first(r,'indications_and_usage'),300,1,need=re.compile(r'indicated|used (?:to|for|in)|treatment of',re.I),skip=re.compile(r'limitations? of use|^adults? and pediatric patients$',re.I))
+    d['cls']=[x for x in [('FDA drug class: '+', '.join(epc)) if epc else '',ind] if x]
     mtxt=first(r,'mechanism_of_action')
     if not mtxt:
-        cp=first(r,'clinical_pharmacology');m=re.search(r'Mechanism of Action[:\s]*(.*)',cp,re.I);mtxt=m.group(1) if m else ''
+        cp=squash(first(r,'clinical_pharmacology'));m=re.search(r'Mechanism of Action\s*[:\-]?\s*(?=[A-Z])(.*)',cp)
+        if m:mtxt=m.group(1)
+        else:
+            ss=[x for x in sents(cp) if re.search(r'mechanism of action|acts by|works by|inhibits|blocks|binds|agonist|antagonist',x,re.I)];mtxt=' '.join(ss[:2])
+    mtxt=re.sub(r'^[A-Za-z\- ]{3,40}\s+Mechanism of Action\s+(?=[A-Z])','',tidy(mtxt))
     d['moa']=[x for x in [pick(mtxt,380,2),('FDA mechanism class: '+'; '.join(moa)) if moa else '',('Effect on the body: '+'; '.join(pe)) if pe else ''] if x]
-    routes=[x.title() for x in o.get('route',[])][:4]
-    d['adm']=[x for x in [('Route'+('s' if len(routes)>1 else '')+' on the label: '+', '.join(routes)) if routes else '',('Do not use when: '+pick(first(r,'contraindications'),320,2)) if first(r,'contraindications') and not re.match(r'\s*(?:\d+\s+)?(?:CONTRAINDICATIONS\s*)?None',first(r,'contraindications'),re.I) else ''] if x]
-    ae=first(r,'adverse_reactions');d['se']=[x for x in [pick(ae,380,2,need=re.compile(r'most common|commonly|frequent|incidence|reported|include',re.I),skip=re.compile(r'clinical trials? (?:are|is) conducted|can ?not be directly compared|following adverse reactions|discussed in (?:greater )?detail|included in more detail|labeling',re.I)) or pick(ae,330,2)] if x]
+    routes=[x.title() for x in (r.get('_routes') or o.get('route',[]))][:5]
+    d['adm']=[x for x in [('Route'+('s' if len(routes)>1 else '')+' on FDA labels: '+', '.join(routes)) if routes else '',('Do not use when: '+pick(first(r,'contraindications'),320,2)) if first(r,'contraindications') and not re.match(r'\s*(?:\d+\s+)?(?:CONTRAINDICATIONS\s*)?None',first(r,'contraindications'),re.I) else ''] if x]
+    ae=first(r,'adverse_reactions');d['se']=[x for x in [pick(ae,380,2,need=re.compile(r'most common|commonly|frequent|most often|occurred in|were (?:nausea|headache|diarrhea|dizziness|rash)|including',re.I),skip=re.compile(r'clinical trials? (?:are|is) conducted|can ?not be directly compared|following adverse reactions|discussed in (?:greater )?detail|included in more detail|labeling|voluntar|uncertain size|causal relationship|conditions and duration|categorized|decreasing severity|listed|presented|reliably|see section|table|dosage|abnormalit|resolved',re.I))] if x]
     pool=' '.join(first(r,k) for k in ('warnings_and_cautions','warnings','precautions','dosage_and_administration','clinical_pharmacology'))
     mon=pick(pool,340,2,need=re.compile(r'\b(monitor\w*|check\w*|measur\w+|obtain|assess\w*|periodic\w*)\b.*\b(level|serum|blood|INR|creatinine|function|count|ECG|pressure|glucose|potassium|liver|kidney|renal|hepatic|electrolyte)',re.I),skip=re.compile(r'\b(patients? should|instruct)',re.I))
     d['labs']=[mon] if mon else []
-    pat=pick(first(r,'information_for_patients'),360,2,skip=re.compile(r'^see\b|FDA-approved patient labeling|patient information leaflet|medication guide',re.I));boxed=pick(first(r,'boxed_warning'),340,2,skip_dose=False)
+    pat=pick(first(r,'information_for_patients'),360,2,need=re.compile(r'\b(advise|counsel|instruct|inform|explain|tell|should be (?:told|advised|instructed|warned)|patients should|should not|do not)\b',re.I),skip=re.compile(r'^see\b|FDA-approved patient labeling|patient information leaflet|medication guide|prescribers or other|health ?care (?:providers|professionals) should|physicians? (?:are|should)',re.I));boxed=re.sub(r'^(?:BOXED WARNING\s*)+','',pick(re.sub(r'See full prescribing information for complete boxed warning\.?','',first(r,'boxed_warning')),340,2,skip_dose=False)).strip()
     d['nsg']=[pat] if pat else []
     meta={'set':r['set_id'],'t':(o.get('brand_name') or o.get('generic_name') or [''])[0].title()[:60],'date':(r.get('effective_time') or '')[:8]}
     out={k:v for k,v in d.items() if v};out['meta']=meta

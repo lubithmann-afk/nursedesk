@@ -229,5 +229,29 @@ const h=AS.html(q,{});console.assert(!/<b>/.test(h)&&/&lt;b&gt;/.test(h)&&/&amp;
 console.assert(AS.split('Which of the following is true?',{}).every(p=>!p.k),'plain generic stems get no highlights');
 console.assert(AS.split('Give it NOT at bedtime',{})[1].k==='a','the word NOT is flagged');
 console.log('assist tests ran');}
+// FDA label lookups (data/fda.js): short, cited, dose-free excerpts
+{const FD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','fda.js'),'utf8').replace(/^window\.FDA=/,'').replace(/;$/,''));
+const names=new Set(JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','meds.js'),'utf8').replace(/^window\.MEDS=/,'').replace(/;$/,'')).meds.map(m=>m.name));
+console.assert(Object.keys(FD).length>350&&Object.keys(FD).every(n=>names.has(n)),'FDA lookups exist for most medications and only for known ones');
+console.assert(Object.values(FD).every(v=>/^[0-9a-f-]{36}$/.test(v.meta.set)&&v.meta.t),'every lookup carries the label id so it can be cited and opened');
+const dose=/\b\d+(?:[.,]\d+)?\s?(?:mg|mcg|mL|units?|IU|mEq|mmol)\b/i,ex=Object.values(FD).flatMap(v=>['cls','moa','adm','se','labs','nsg'].flatMap(k=>v[k]||[]));
+console.assert(!ex.some(x=>dose.test(x))&&ex.every(x=>x.length<=420),'FDA excerpts contain no doses and are short');
+console.assert(!ex.some(x=>/\[\s*see|\(\s*\d+\.\d+\s*\)/i.test(x)),'cross-references like [see Warnings (5.1)] were removed');
+console.assert(FD.warfarin.box&&/bleed/i.test(FD.warfarin.box)&&/INR/.test((FD.warfarin.labs||[]).join(' ')),'warfarin: boxed warning about bleeding and INR monitoring');
+console.assert(!FD['St. John\'s wort']&&!FD['influenza vaccine'],'supplements and vaccines have no FDA drug label entry');
+console.log('FDA lookup tests ran:',Object.keys(FD).length,'medications');}
+// Drug-specific plain-language text (tools/meds/core.py): each medication page describes only that drug
+{const MM=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','meds.js'),'utf8').replace(/^window\.MEDS=/,'').replace(/;$/,'')).meds;
+const grp=new Set(['statins','corticosteroids','HIV antiretrovirals','salicylates','parenteral nutrition','chemotherapeutic agents','multivitamin']);
+const own=MM.filter(m=>!grp.has(m.name));
+const FK2=['cls','moa','adm','se','labs','nsg'];
+console.assert(own.length>450&&own.every(m=>FK2.every(k=>m.f[k].g.length>0)),'every individual drug has text in all six sections');
+console.assert(MM.every(m=>FK2.every(k=>!m.f[k].c)),'no medication still carries borrowed whole-class text');
+const dose=/\b\d+(?:\.\d+)?\s?(?:mg|mcg|mL|units?|IU|mEq|mmol)\b(?!\/)/i;
+console.assert(!own.some(m=>FK2.some(k=>m.f[k].g.some(x=>dose.test(x)&&!/mg\/dL|mcg\/mL|ng\/mL|mEq\/L/.test(x)))),'plain-language text contains no doses (lab targets are allowed)');
+const wf=MM.find(m=>m.name==='warfarin');
+console.assert(/vitamin K/i.test(wf.f.nsg.g.join(' '))&&/INR/.test(wf.f.labs.g.join(' '))&&!/aPTT/.test(wf.f.labs.g.join(' ')),'warfarin text is about warfarin (INR, vitamin K), not heparin (aPTT)');
+const cd=MM.find(m=>m.name==='codeine');console.assert(!/meperidine|methadone|fentanyl/i.test(FK2.map(k=>cd.f[k].g.join(' ')).join(' ')),'codeine page does not describe other opioids');
+console.log('plain-language drug text tests ran:',own.length,'drugs');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
