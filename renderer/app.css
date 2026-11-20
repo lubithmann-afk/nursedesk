@@ -113,3 +113,14 @@ details.mcat>summary,.card>summary{cursor:pointer}
 /* dark theme: the accent is a light blue, so filled buttons and the selected tab use dark text for contrast */
 :root[data-theme=dark] #pane-practice button.p:not(.opt),:root[data-theme=dark] #pane-slides button.p,:root[data-theme=dark] #pane-meds button.p,:root[data-theme=dark] #pane-notes button.p,:root[data-theme=dark] #pane-ai button.p,:root[data-theme=dark] #pane-settings button.p,:root[data-theme=dark] #tabs button.on{color:#07101f}
 :root[data-theme=dark] #pane-practice button.p:not(.opt):hover:not(:disabled),:root[data-theme=dark] #pane-slides button.p:hover:not(:disabled),:root[data-theme=dark] #pane-meds button.p:hover:not(:disabled),:root[data-theme=dark] #pane-notes button.p:hover:not(:disabled),:root[data-theme=dark] #pane-ai button.p:hover:not(:disabled),:root[data-theme=dark] #pane-settings button.p:hover:not(:disabled){color:#07101f}
+
+/* medication page: easier to read */
+.glance{border:2px solid var(--acc);border-radius:14px;padding:14px 16px;margin:6px 0 10px;background:color-mix(in srgb,var(--acc) 7%,var(--card))}
+.glance h2{margin:0 0 8px;font-size:17px}.gl{margin:8px 0}.gl b{display:block;font-size:12px;letter-spacing:.3px;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+.gl span,.gl li{font-size:16px;line-height:1.45}.gl ul{margin:2px 0 0 18px;padding:0}
+.boxw{margin-top:10px;border:2px solid var(--bad);border-radius:10px;padding:8px 12px;background:var(--badbg);font-size:14px;line-height:1.4}.boxw b{color:var(--bad)}
+.msc{margin:18px 0 6px}.msc h2.msec{margin:0 0 6px;font-size:19px}.msec small{font-size:12px;font-weight:400;color:var(--mut);margin-left:6px}
+ul.plain{margin:0 0 8px;padding:0 0 0 20px}ul.plain li{font-size:16px;line-height:1.5;margin:4px 0}
+details.mat,details.fda,details.about{margin:6px 0;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--card)}
+details.mat>summary,details.fda>summary,details.about>summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--acc)}
+details.fda .mf{border-style:dashed;background:transparent}

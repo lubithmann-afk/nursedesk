@@ -126,35 +126,51 @@ function detailQuiz(i){
 }
 const TRUST='This medication was not found in your PowerPoints, the Galen quizzes or the ATI guide, so everything below is a general reference I wrote from standard drug references (FDA labeling, MedlinePlus and nursing pharmacology texts). It is not copied from them and I could not check it drug by drug against a live source. It has no doses. Always check your course drug guide, the package labeling or the provider’s order.';
 const lookups=m=>`<div class="mfh">Look it up in a trusted source</div><div class="row2" style="margin:0 0 6px"><a class="lk" data-u="https://vsearch.nlm.nih.gov/vivisimo/cgi-bin/query-meta?v%3Aproject=medlineplus&query=${encodeURIComponent(m.name)}" style="color:var(--acc);cursor:pointer">MedlinePlus (NIH)</a> · <a class="lk" data-u="https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=${encodeURIComponent(m.name)}" style="color:var(--acc);cursor:pointer">DailyMed (FDA labels)</a></div>`;
+// ---- medication page: plain words first, then what the FDA label says (looked up), then your own class material
+const SECT=[['cls','What it is','Drug classification'],['moa','How it works','Mechanism of action'],['adm','How to give it safely','Safe administration'],['se','Side effects','Side effects'],['labs','Labs to watch','Lab monitoring'],['nsg','What the nurse does','Nursing interventions']];
+const FDA=()=>window.FDA||{};
+const fdaLink=(f)=>f&&f.meta?'https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid='+encodeURIComponent(f.meta.set):'';
+const fdaDate=f=>{const d=f&&f.meta&&f.meta.date;return d&&d.length===8?d.slice(0,4)+'-'+d.slice(4,6):''};
+function glance(m,f){
+  const g=k=>m.f[k].g;const pts=[g('nsg')[0],g('adm')[0],g('se')[0]].filter(Boolean).slice(0,3);
+  return `<div class="glance"><h2>At a glance</h2>
+   <div class="gl"><b>What it is for</b><span>${esc(g('cls')[0]||'')}</span></div>
+   ${pts.length?`<div class="gl"><b>Most important to know</b><ul>${pts.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
+   ${g('labs').length?`<div class="gl"><b>Labs to watch</b><span>${esc(g('labs').slice(0,3).join(' · '))}</span></div>`:''}
+   ${f&&f.box?`<div class="boxw"><b>FDA boxed warning</b> (the strongest safety warning an FDA label can carry)<div>${esc(f.box)}</div></div>`:''}</div>`;
+}
 function detail(i){
   if(view==='quiz'&&D().meds[i].q.length)return detailQuiz(i);
   if(view==='quiz')view='main';
   const d=D(),m=d.meds[i];cur=i;
-  const extra=isExtra(m);
-  const showSlides=view!=='ati',showAti=view==='main'||view==='ati',showGen=view!=='ati';
+  const extra=isExtra(m),f=FDA()[m.name];
+  const showSlides=view!=='ati',showAti=view==='main'||view==='ati',showPlain=view!=='ati';
   const linesOf=(k,ati)=>m.f[k].m.filter(x=>isAti(x)===ati);
-  const block=(title,L)=>L.length?`<div class="mfh">${title}</div><ul class="mfl">${L.map(x=>srcLine(m,x)).join('')}</ul>`:'';
-  const sec=([k,t])=>{
-    const f=m.f[k],S=showSlides?linesOf(k,false):[],A=showAti?linesOf(k,true):[];
-    let mine=block('From your class slides',S)+block('From the ATI study guide',A);
-    if(!mine&&view!=='misc'&&!extra)mine=`<div class="mfn">${view==='ati'?'Nothing about this under this heading in the ATI study guide.':view==='main'?'Nothing specific about this drug under this heading in your class slides or the ATI guide.':'Nothing specific about this drug in your class slides.'}</div>`;
-    const gen=showGen&&f.g.length?`<div class="mfh gen">General reference <span>(my own summary, not from your class materials)</span></div><ul class="mfl gen">${f.g.map(x=>`<li class="mf">${esc(x)}</li>`).join('')}</ul>`:'';
-    return `<h2 class="msec">${t}</h2>${mine}${gen}`;
+  const block=(title,L)=>L.length?`<details class="mat" open><summary>${title} (${L.length})</summary><ul class="mfl">${L.map(x=>srcLine(m,x)).join('')}</ul></details>`:'';
+  const sec=([k,t,official])=>{
+    const S=showSlides?linesOf(k,false):[],A=showAti?linesOf(k,true):[],plain=showPlain?m.f[k].g:[],fl=showPlain&&f&&f[k]?f[k]:[];
+    const hasMat=S.length+A.length>0;
+    const plainHtml=plain.length?`<ul class="plain">${plain.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'';
+    const fdaHtml=fl.length?`<details class="fda" ${hasMat?'':'open'}><summary>What the FDA drug label says (looked up)</summary><ul class="mfl">${fl.map(x=>`<li class="mf"><span>${esc(x)}</span></li>`).join('')}</ul><div class="cnt">Source: official FDA label${f.meta.t?' for '+esc(f.meta.t):''}${fdaDate(f)?', updated '+fdaDate(f):''}. <a class="lk" data-u="${esc(fdaLink(f))}">Open the full label</a></div></details>`:'';
+    const mat=block('From your class slides',S)+block('From the ATI study guide',A);
+    const none=!plainHtml&&!fdaHtml&&!mat?`<div class="mfn">${view==='ati'?'The ATI study guide says nothing about this under this heading.':'Nothing found for this heading.'}</div>`:'';
+    return `<section class="msc"><h2 class="msec">${t} <small>${official}</small></h2>${plainHtml}${mat}${fdaHtml}${none}</section>`;
   };
-  const note={main:'Lines under “From your class slides” and “From the ATI study guide” are copied word for word; tap Open to see them in place. The general reference fills gaps with standard teaching and has no doses.',
-    ppt:'Lines under “From your class slides” are copied word for word from your PowerPoints; tap Open to see them in place. The general reference fills gaps with standard teaching and has no doses.',
-    ati:'Everything below is copied word for word from the ATI study guide; tap Open to see the page. Nothing here is my own summary.',
-    misc:'This medication was not found in your PowerPoints, the Galen quizzes or the ATI guide, so this is only a general reference (my own summary, no doses).'}[view];
-  root().innerHTML=head(m,i)+`${extra?`<div class="card" style="border-color:var(--bad)"><b>Not from your class materials</b><div class="cnt" style="margin-top:6px">${TRUST}</div></div>${lookups(m)}`:`<p class="cnt">${note} Always check your course drug guide or the provider’s order for doses and parameters.</p>`}
+  const note={main:'Plain-language summaries are my own wording. Lines from your slides and the ATI guide are copied word for word, and the FDA label text was looked up. Tap Open to see where something came from.',
+    ppt:'Plain-language summaries are my own wording. Lines from your PowerPoints are copied word for word. FDA label text was looked up.',
+    ati:'Everything below is copied word for word from the ATI study guide. Tap Open to see the page.',
+    misc:'This medication is not in your PowerPoints, the Galen quizzes or the ATI guide.'}[view];
+  const about=`<details class="about"><summary>About these sources</summary><div class="cnt">${esc(note)} None of it gives doses. Always check your course drug guide or the provider’s order for doses and parameters.${extra?' '+esc(TRUST):''}</div></details>`;
+  root().innerHTML=head(m,i)+(showPlain?glance(m,f):'')+about+(extra?lookups(m):'')+`
    ${showAti&&m.ap&&m.ap.length&&atiDeck()?`<div class="mfh">Pages of the ATI study guide that mention it</div><div class="row2" style="margin:0 0 6px">${m.ap.map(n=>`<a class="atp" data-n="${n}" style="color:var(--acc);cursor:pointer">p. ${n}</a>`).join(' · ')}</div>`:''}
-   ${FIELDS.map(sec).join('')}
+   ${SECT.map(sec).join('')}
    ${view==='main'&&m.q.length?`<details class="mqs" style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">Galen practice questions that mention it (${m.q.length})</summary><div style="margin-top:8px">${m.q.map(id=>qCard(m,id)).join('')}</div></details>`:''}
    <div class="row2" style="margin-top:14px"><span class="cnt">Study this drug with your own account:</span><button id="hgpt">Ask ChatGPT</button><button id="hcl">Ask Claude</button></div><div class="cnt" id="hmsg"></div>
    ${m.q.length&&view!=='ati'?`<button class="p" id="pq" style="margin-top:16px">Practice ${m.q.length} question${m.q.length>1?'s':''} on this medication</button>`:''}`;
   for(const [id,site] of [['hgpt','chatgpt'],['hcl','claude']])document.getElementById(id).onclick=async()=>{
     const lab=x=>x.x+' ('+(D().decks[x.u.split(':')[0]].k==='page'?'ATI guide p. '+x.u.split(':')[1]:short(D().decks[x.u.split(':')[0]].n)+' slide '+x.u.split(':')[1])+')';
     const ex=FIELDS.map(([k,t])=>({src:t,text:m.f[k].m.filter(x=>view==='ati'?isAti(x):view==='main'?true:!isAti(x)).map(lab).join('\n')})).filter(e=>e.text);
-    document.getElementById('hmsg').textContent=await window.handoff.send(site,window.handoff.prompt(`Teach me ${cap(m.name)} (${m.cls}): classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions, then quiz me with 3 NCLEX-style questions.`,ex))};
+    document.getElementById('hmsg').textContent=await window.handoff.send(site,window.handoff.prompt(`Teach me ${cap(m.name)} (${m.cls}) in simple words: classification, mechanism of action, safe administration, side effects, lab monitoring and nursing interventions, then quiz me with 3 NCLEX-style questions.`,ex))};
   const pq=document.getElementById('pq');if(pq)pq.onclick=()=>practice(m.q);
   wireHead(i);
 }
