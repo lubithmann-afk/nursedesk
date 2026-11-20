@@ -74,6 +74,7 @@ function draw(){
     <div class="rat"><strong>Your reasoning</strong>${esc(t.guessed&&!t.text.trim()?'(You said you were not sure.)':t.text)}</div>
     ${t.feedback?`<div class="rat"><strong>Your coach</strong>${fmt(t.feedback)}</div>`:`<div class="rat"><strong>Coach unavailable</strong>${esc(t.err||'No feedback this time.')}</div>`}
     <details style="margin-top:10px" ${t.feedback?'':'open'}><summary style="cursor:pointer">Rationale from the question bank</summary><div class="rat" style="white-space:pre-line">${esc(q.r||'')}</div></details>
+    ${!t.ok&&window.misreadToggle?`<button id="chmr" class="mrb ${window.misreadState(t.q.id)?'on':''}" style="width:100%;margin-top:10px">${window.misreadState(t.q.id)?'✓ Marked: I knew the answer, I just didn’t read everything (tap to undo)':'I knew the answer, I just didn’t read everything'}</button>`:''}
     <h3 style="margin:16px 0 6px;font-size:14px">Ask a follow-up question</h3>
     ${(t.chat||[]).map(m=>`<div class="cm ${m.role==='user'?'user':'assistant'}">${m.role==='user'?esc(m.content):fmt(m.content)}</div>`).join('')}${t.fbusy?'<div class="cnt">Your coach is thinking…</div>':''}${t.ferr?`<div class="cnt">${esc(t.ferr)}</div>`:''}
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">${['Why are the other options wrong?','What should I look for next time?','Explain it more simply'].map(x=>`<button class="fuq" data-q="${esc(x)}" ${t.fbusy?'disabled':''}>${esc(x)}</button>`).join('')}</div>
@@ -84,7 +85,7 @@ function draw(){
    <div class="card"><div class="q" style="white-space:pre-line">${esc(q.q)}</div>${multi?'<div class="cnt" style="margin:-6px 0 10px">Select all that apply</div>':''}${opts}${body}<div class="src">${esc(window.QD.top[q.t])}</div></div>`;
   app().querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;if(multi){const i=t.sel.indexOf(k);i<0?t.sel.push(k):t.sel.splice(i,1)}else t.sel=[k];draw()});
   const on=(id,fn)=>{const e=$(id);if(e)e.onclick=fn};
-  on('#chlk',()=>lockIn(t));on('#chsub',()=>reason(t,false));on('#chg',()=>reason(t,true));on('#chnx',next);on('#chpv',()=>{armed=false;C.i--;draw();window.scrollTo(0,0)});
+  on('#chlk',()=>lockIn(t));on('#chsub',()=>reason(t,false));on('#chg',()=>reason(t,true));on('#chnx',next);on('#chmr',()=>{window.misreadToggle(t.q.id);draw()});on('#chpv',()=>{armed=false;C.i--;draw();window.scrollTo(0,0)});
   on('#chq',()=>{if(armed){armed=false;setup()}else{armed=true;draw()}});
   const fu=$('#chfu');if(fu){fu.oninput=()=>{t.fu=fu.value};fu.onkeydown=e=>{if(e.key==='Enter')followup(t,fu.value)};on('#chfs',()=>followup(t,fu.value));app().querySelectorAll('.fuq').forEach(b=>b.onclick=()=>followup(t,b.dataset.q))}
   const tx=$('#chtx');if(tx){tx.oninput=()=>{t.text=tx.value;const b=$('#chsub');if(b)b.disabled=t.text.trim().length<3};if(!tx.value)tx.focus()}

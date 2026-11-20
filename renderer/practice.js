@@ -11,7 +11,8 @@ let st={};
 let P={a:{}};let saveState='';let dbDoc=null;let saving=false,dirty=false;
 function lsGet(){try{const v=localStorage.getItem('nur283_progress');return v?JSON.parse(v):null}catch(e){return null}}
 function lsSet(){try{localStorage.setItem('nur283_progress',JSON.stringify(P))}catch(e){}}
-function merge(a,b){const r={a:{}};[a,b].forEach(x=>{if(x&&x.a)for(const k in x.a){const v=x.a[k],o=r.a[k];if(!o||(v.t||0)>(o.t||0))r.a[k]=v}});if(a&&a.run)r.run=a.run;if(b&&b.run&&(!r.run||(b.run.t||0)>(r.run.t||0)))r.run=b.run;return r}
+function merge(a,b){const r={a:{}};[a,b].forEach(x=>{if(x&&x.a)for(const k in x.a){const v=x.a[k],o=r.a[k];if(!o||(v.t||0)>(o.t||0))r.a[k]=v}});const un=(k,key)=>{const m=new Map();[a,b].forEach(x=>(x&&x[k]||[]).forEach(e=>m.set(key(e),e)));const v=[...m.values()].sort((x,y)=>x.t-y.t);if(v.length)r[k]=v.slice(-2000)};un('mr',e=>e.id+':'+e.t);un('lg',e=>e.i+':'+e.t);
+  if(a&&a.run)r.run=a.run;if(b&&b.run&&(!r.run||(b.run.t||0)>(r.run.t||0)))r.run=b.run;return r}
 function setSv(){const e=$('#sv');if(e)e.textContent=saveState}
 async function flush(){
   lsSet();
@@ -57,7 +58,25 @@ function resume(){const s=savedRun();if(!s){home();return}st.run=s.run;const f=s
 function discardRun(){delete P.run;flush();home()}
 function record(q,ok){
   const o=P.a[q.id]||{n:0,c:0,l:1,t:0};
-  o.n++;if(ok)o.c++;o.l=ok?1:0;o.t=Date.now();P.a[q.id]=o;flush();
+  o.n++;if(ok)o.c++;o.l=ok?1:0;o.t=Date.now();P.a[q.id]=o;(P.lg=P.lg||[]).push({i:q.id,t:o.t,o:ok?1:0});if(P.lg.length>2000)P.lg=P.lg.slice(-2000);flush();
+}
+// "I knew it, I just didn't read everything": flagged per ATTEMPT (the answer time), only for missed questions.
+const mrOn=id=>!!(P.a[id]&&(P.mr||[]).some(e=>e.id===id&&e.t===P.a[id].t));
+function mrToggle(id){
+  const o=P.a[id];if(!o||o.l!==0)return false;
+  P.mr=P.mr||[];const i=P.mr.findIndex(e=>e.id===id&&e.t===o.t);
+  if(i>=0)P.mr.splice(i,1);else P.mr.push({id,t:o.t});
+  if(P.mr.length>2000)P.mr=P.mr.slice(-2000);flush();return mrOn(id);
+}
+window.misreadState=mrOn;window.misreadToggle=mrToggle;
+function mrStats(){
+  const flags=(P.mr||[]).filter(e=>D.bank.some(q=>q.id===e.id));
+  let wrong=0;for(const k in P.a)wrong+=P.a[k].n-P.a[k].c;
+  const wk=Date.now()-7*864e5,lg=P.lg||[];
+  const wWrong=lg.filter(e=>!e.o&&e.t>=wk).length,wFlag=flags.filter(e=>e.t>=wk).length;
+  const byTopic={};flags.forEach(e=>{const q=D.bank.find(z=>z.id===e.id);if(q)byTopic[q.t]=(byTopic[q.t]||0)+1});
+  const topics=Object.entries(byTopic).map(([t,n])=>({name:D.top[+t],n})).sort((a,b)=>b.n-a.n).slice(0,3);
+  return{flags:flags.length,wrong,pct:wrong?Math.min(100,Math.round(flags.length/wrong*100)):0,wWrong,wFlag,topics,ids:[...new Set(flags.map(e=>e.id))]};
 }
 function missedIds(){return D.bank.filter(q=>P.a[q.id]&&P.a[q.id].l===0).map(q=>q.id)}
 function topicStats(){
@@ -185,18 +204,20 @@ function show(){
       if(ans){if(corr)c='ok';else if(chosen)c='bad';else c='dim';mk=chosen?'☑':'☐'}else{c=chosen?'sel':'';mk=chosen?'☑':'☐'}
       return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${mk}</b><span>${L[k]}. ${esc(q.o[oi])}</span></button>`}
     if(ans){if(oi===q.a)c='ok';else if(k===t.pick)c='bad';else c='dim'}return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${L[k]}.</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
-  ${ans?rat(t)+chatHTML(t):''}
+  ${ans?rat(t)+(isOk(t)?'':mrButton(q.id))+chatHTML(t):''}
   <div class="src">${esc(sn(q.s))} · ${esc(D.top[q.t])}</div></div>
   <div class="nav"><button id="ex">Save &amp; exit</button>${st.i>0?'<button id="pv">← Previous</button>':''}<button class="p" id="nx" ${ans||(multi&&t.sel&&t.sel.length)?'':'disabled'}>${ans?(st.i===n-1?'See results':'Next'):(multi?'Submit answer':'Next')}</button></div>`;
   document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;
     if(multi){t.sel=t.sel||[];const i=t.sel.indexOf(k);if(i<0)t.sel.push(k);else t.sel.splice(i,1);show();return}
     t.pick=k;const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
   wireChat(t);
+  const mrd=$('#mrd');if(mrd)mrd.onclick=()=>{mrToggle(q.id);show()};
   $('#nx').onclick=()=>{if(multi&&!ans){t.pick=(t.sel||[]).slice().sort((a,b)=>a-b);const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});return}
     if(st.i===n-1)results();else{st.i++;saveRun();show();window.scrollTo(0,0)}};
   $('#ex').onclick=()=>{saveRun();home()};
   const pv=$('#pv');if(pv)pv.onclick=()=>{st.i--;saveRun();show();window.scrollTo(0,0)};   // review only: answered questions stay locked
 }
+function mrButton(id){const on=mrOn(id);return`<div style="margin:10px 0"><button id="mrd" class="mrb ${on?'on':''}" style="width:100%">${on?'✓ Marked: I knew the answer, I just didn’t read everything (tap to undo)':'I knew the answer, I just didn’t read everything'}</button></div>`}
 function rat(t){const ok=isOk(t);
   return`<div class="rat ${ok?'ok':'bad'}"><strong>${ok?'Correct':'Incorrect'} — answer: ${corLetters(t)}</strong>${esc(t.q.r).replace(/\n/g,'<br>')}</div>`}
 function results(){
@@ -205,7 +226,7 @@ function results(){
   const wrong=done.filter(x=>!isOk(x));
   app.innerHTML=`<h1>Results</h1><div class="card"><div class="big">${ok} / ${done.length} (${pct}%)</div>
   <div class="cnt">${st.run.length-done.length?`${st.run.length-done.length} unanswered`:'All answered'}</div></div>
-  <div class="card"><h2>Missed questions (${wrong.length})</h2>${wrong.length?wrong.map(x=>`<div class="mi"><div><b>${esc(x.q.q)}</b></div><div style="margin-top:6px"><span class="tag b">Your answer</span>${esc(pickText(x))}</div><div style="margin-top:4px"><span class="tag">Correct</span>${esc(corText(x.q))}</div><div class="rat" style="margin-top:8px">${esc(x.q.r)}</div></div>`).join(''):'<div class="cnt">None — nice work.</div>'}</div>
+  <div class="card"><h2>Missed questions (${wrong.length})</h2>${wrong.filter(x=>mrOn(x.q.id)).length?`<div class="cnt" style="margin-bottom:8px">You marked ${wrong.filter(x=>mrOn(x.q.id)).length} of these as “I knew it, I just didn’t read everything”.</div>`:''}${wrong.length?wrong.map(x=>`<div class="mi"><div><b>${esc(x.q.q)}</b></div><div style="margin-top:6px"><span class="tag b">Your answer</span>${esc(pickText(x))}</div><div style="margin-top:4px"><span class="tag">Correct</span>${esc(corText(x.q))}</div><div class="rat" style="margin-top:8px">${esc(x.q.r)}</div></div>`).join(''):'<div class="cnt">None — nice work.</div>'}</div>
   <div class="nav"><button id="h">Home</button><button id="ip">Progress</button><button class="p" id="rt" ${missedIds().length?'':'disabled'}>Retake missed (${missedIds().length})</button></div>`;
   $('#h').onclick=home;$('#ip').onclick=improve;$('#rt').onclick=()=>start('missed',50,true);
 }
@@ -217,9 +238,14 @@ function improve(){
   const ranked=ts.filter(s=>s.n>0).sort((a,b)=>a.pct-b.pct);
   const unseen=ts.filter(s=>s.n===0);
   const worst=D.bank.filter(q=>P.a[q.id]&&P.a[q.id].n-P.a[q.id].c>0).sort((a,b)=>{const x=P.a[a.id],y=P.a[b.id];return (y.n-y.c)-(x.n-x.c)||(x.l-y.l)||y.t-x.t}).slice(0,10);
-  const wt=weakTopics();
+  const wt=weakTopics(),ms=mrStats();
   app.innerHTML=`<h1>My progress</h1><p class="sv" id="sv"></p>
   ${n?`<div class="stat"><div><b>${pct}%</b><span>overall</span></div><div><b>${n}</b><span>answers</span></div><div><b>${seenQ}/${tot}</b><span>seen</span></div><div><b>${mi.length}</b><span>still wrong</span></div></div>`:'<div class="card"><div class="cnt">No answers yet. Take a test and your results will show up here.</div></div>'}
+  <div class="card"><h2>Reading carefully</h2>${ms.flags?`<div class="stat"><div><b>${ms.pct}%</b><span>of my misses</span></div><div><b>${ms.flags}</b><span>“knew it”</span></div><div><b>${ms.wrong}</b><span>misses in all</span></div></div>
+   <div class="cnt" style="margin-top:8px">You marked ${ms.flags} of your ${ms.wrong} misses as “I knew the answer, I just didn’t read everything”.${ms.wWrong?` In the last 7 days: ${ms.wFlag} of ${ms.wWrong} misses.`:''}</div>
+   ${ms.topics.length?`<div class="cnt" style="margin-top:6px">Most often in: ${ms.topics.map(t=>esc(t.name)+' ('+t.n+')').join(', ')}.</div>`:''}
+   <div class="cnt" style="margin-top:8px"><b>Slow down:</b> read the last line first, circle words like NOT, EXCEPT, FIRST and BEST, then read every option before you choose.</div>
+   <button class="p" id="rushed" style="margin-top:10px;width:100%">Practice the ${ms.ids.length} question${ms.ids.length>1?'s':''} I rushed</button>`:`<div class="cnt">After you miss a question, tap “I knew the answer, I just didn’t read everything” to see here how often it happens.</div>`}</div>
   ${wt.length?`<div class="card"><h2>Focus on these first</h2>${wt.slice(0,3).map(s=>`<div class="tr"><div class="h"><b>${esc(s.name)}</b><span class="pill">${Math.round(s.pct)}%</span></div><div class="cnt">${s.c} of ${s.n} correct</div></div>`).join('')}<button class="p" style="width:100%;margin-top:10px" id="pw">Practice weak areas (${getPool('weak').length} questions)</button></div>`:(n?'<div class="card"><h2>Focus areas</h2><div class="cnt">No topic is below 75% yet (a topic needs at least 2 answers to be flagged). Keep going.</div></div>':'')}
   ${ranked.length?`<div class="card"><h2>All topics, weakest first</h2>${ranked.map(s=>{const p=Math.round(s.pct);return`<div class="tr"><div class="h"><span>${esc(s.name)}</span><span class="pill ${p>=75?'g':''}">${p}%</span></div><div class="mb"><i style="width:${p}%;background:${col(p)}"></i></div><div class="cnt">${s.c}/${s.n} correct · ${s.seen} of ${s.total} questions seen</div><button style="margin-top:6px;padding:6px 10px;font-size:13px" data-t="${s.i}">Drill this topic</button></div>`}).join('')}${unseen.length?`<div class="cnt" style="margin-top:8px">Not started: ${unseen.map(s=>esc(s.name)).join(', ')}</div>`:''}</div>`:''}
   ${worst.length?`<div class="card"><h2>Most-missed questions</h2>${worst.map(q=>{const o=P.a[q.id];return`<div class="mi"><div><b>${esc(q.q)}</b></div><div class="cnt" style="margin:4px 0">${esc(D.top[q.t])} · missed ${o.n-o.c} of ${o.n}${o.l?' · got it right last time':''}</div><div><span class="tag">Correct</span>${esc(corText(q))}</div><div class="rat" style="margin-top:8px">${esc(q.r).replace(/\n/g,'<br>')}</div></div>`}).join('')}</div>`:''}
@@ -227,6 +253,7 @@ function improve(){
   ${(n||P.run)?'<div style="text-align:center;margin-top:14px"><button id="rs" style="font-size:13px;padding:8px 12px">Clear all my progress</button></div>':''}`;
   setSv();$('#h').onclick=home;
   const pw=$('#pw');if(pw)pw.onclick=()=>start('weak',50,true);
+  const rushed=$('#rushed');if(rushed)rushed.onclick=()=>window.practiceIds(ms.ids);
   const rm=$('#rm2');if(rm)rm.onclick=()=>start('missed',50,true);
   document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>start('t'+b.dataset.t,50,true));
   const rs=$('#rs');if(rs)rs.onclick=()=>{rs.textContent='Tap again to erase everything (answers, history, unfinished test)';rs.onclick=()=>{P={a:{}};flush();improve()}};
