@@ -253,5 +253,15 @@ const wf=MM.find(m=>m.name==='warfarin');
 console.assert(/vitamin K/i.test(wf.f.nsg.g.join(' '))&&/INR/.test(wf.f.labs.g.join(' '))&&!/aPTT/.test(wf.f.labs.g.join(' ')),'warfarin text is about warfarin (INR, vitamin K), not heparin (aPTT)');
 const cd=MM.find(m=>m.name==='codeine');console.assert(!/meperidine|methadone|fentanyl/i.test(FK2.map(k=>cd.f[k].g.join(' ')).join(' ')),'codeine page does not describe other opioids');
 console.log('plain-language drug text tests ran:',own.length,'drugs');}
+// Class-slide questions are word for word from the decks: the stem and every option must appear in the same slide; no duplicate options; none written by the app
+{const QQ=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,''));
+const nkk=s=>String(s).toLowerCase().replace(/[’‘]/g,"'").replace(/[^a-z0-9]/g,'');
+const slidesAll=[];for(const f of fs.readdirSync(path.join(__dirname,'..','data','seed'))){const d=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','seed',f,'deck.json'),'utf8'));d.slides.forEach(s=>slidesAll.push(nkk(s.text.join(' '))))}
+const cls=QQ.bank.filter(q=>/^Class slides/.test(QQ.src[q.s]));
+const missing=cls.filter(q=>{const st=nkk(q.q.replace(/\s*\[In this app[^\]]*\]/,''));const sl=slidesAll.find(s=>s.includes(st.slice(0,80)));return !sl||!q.o.every(o=>sl.includes(nkk(o.replace(/^[“"]|[”"]$/g,''))))});
+console.assert(cls.length>=60&&missing.length===0,'every class-slide question and each of its options appears word for word on its slide: '+missing.map(q=>q.id));
+console.assert(QQ.bank.every(q=>new Set(q.o).size===q.o.length||q.id===371||q.id===498),'no question repeats an option (371 and 498 repeat in the source file itself)');
+console.assert(![241,243,244,245].some(id=>QQ.bank.some(q=>q.id===id)),'questions that were not on any slide were removed');
+console.log('class-slide wording tests ran:',cls.length,'questions');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
