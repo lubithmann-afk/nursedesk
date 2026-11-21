@@ -22,6 +22,7 @@ for _f in ('bank5.json','bank6.json','bank7.json','bank8.json'):
     ids+=1
     bank.append({"id":ids,"t":_tl.index(_CODE[q['t']]),"s":srcs.index(q['src']),"q":q['q'],"o":q['o'],"a":q['a'],"r":q['r']})
     if _f=='bank8.json':bank[-1]["x"]=1
+import conflicts;conflicts.apply(bank,srcs)   # note the disagreeing key on both questions of each conflicting pair
 data=json.dumps({"src":srcs,"top":tl,"bank":bank},ensure_ascii=False)
 html=open('tpl.html').read().replace('/*DATA*/',data)
 open('quiz.html','w').write(html)
