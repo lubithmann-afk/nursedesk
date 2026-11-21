@@ -87,18 +87,18 @@ mark.as-a{background:rgba(245,190,40,.42)}mark.as-b{background:rgba(70,140,255,.
 .asb{width:100%;border-style:dashed}.asb.on{border-style:solid;border-color:var(--acc);color:var(--acc)}
 /* ---- clearer buttons: every button looks pressable (border, soft shadow, hover lift, pressed state, focus ring) ---- */
 :root{--btn-edge:color-mix(in srgb,var(--ink) 30%,var(--line));--btn-shadow:0 1px 0 rgba(0,0,0,.10),0 2px 5px rgba(0,0,0,.14)}
-#pane-practice button:not(.opt),#pane-slides button,#pane-meds button,#pane-notes button,#pane-ai button,#pane-settings button{
+#pane-practice button:not(.opt),#pane-slides button,#pane-meds button,#pane-notes button,#pane-ai button,#pane-tutor button,#pane-settings button{
   border:1.5px solid var(--btn-edge);background:linear-gradient(var(--card),color-mix(in srgb,var(--card) 90%,var(--ink)));color:var(--ink);
   font-weight:600;box-shadow:var(--btn-shadow);transition:transform .08s,box-shadow .12s,border-color .12s,background .12s}
-#pane-practice button:not(.opt):hover:not(:disabled),#pane-slides button:hover:not(:disabled),#pane-meds button:hover:not(:disabled),#pane-notes button:hover:not(:disabled),#pane-ai button:hover:not(:disabled),#pane-settings button:hover:not(:disabled){
+#pane-practice button:not(.opt):hover:not(:disabled),#pane-slides button:hover:not(:disabled),#pane-meds button:hover:not(:disabled),#pane-notes button:hover:not(:disabled),#pane-ai button:hover:not(:disabled),#pane-tutor button:hover:not(:disabled),#pane-settings button:hover:not(:disabled){
   border-color:var(--acc);color:var(--acc);box-shadow:0 3px 8px rgba(0,0,0,.20);transform:translateY(-1px)}
-#pane-practice button:not(.opt):active:not(:disabled),#pane-slides button:active:not(:disabled),#pane-meds button:active:not(:disabled),#pane-notes button:active:not(:disabled),#pane-ai button:active:not(:disabled),#pane-settings button:active:not(:disabled){
+#pane-practice button:not(.opt):active:not(:disabled),#pane-slides button:active:not(:disabled),#pane-meds button:active:not(:disabled),#pane-notes button:active:not(:disabled),#pane-ai button:active:not(:disabled),#pane-tutor button:active:not(:disabled),#pane-settings button:active:not(:disabled){
   transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,.22)}
-#pane-practice button.p:not(.opt),#pane-slides button.p,#pane-meds button.p,#pane-notes button.p,#pane-ai button.p,#pane-settings button.p{
+#pane-practice button.p:not(.opt),#pane-slides button.p,#pane-meds button.p,#pane-notes button.p,#pane-ai button.p,#pane-tutor button.p,#pane-settings button.p{
   background:linear-gradient(var(--acc),color-mix(in srgb,var(--acc) 82%,#000));border-color:color-mix(in srgb,var(--acc) 75%,#000);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--acc) 50%,transparent)}
-#pane-practice button.p:not(.opt):hover:not(:disabled),#pane-slides button.p:hover:not(:disabled),#pane-meds button.p:hover:not(:disabled),#pane-notes button.p:hover:not(:disabled),#pane-ai button.p:hover:not(:disabled),#pane-settings button.p:hover:not(:disabled){color:#fff;filter:brightness(1.1);box-shadow:0 4px 12px color-mix(in srgb,var(--acc) 60%,transparent)}
+#pane-practice button.p:not(.opt):hover:not(:disabled),#pane-slides button.p:hover:not(:disabled),#pane-meds button.p:hover:not(:disabled),#pane-notes button.p:hover:not(:disabled),#pane-ai button.p:hover:not(:disabled),#pane-tutor button.p:hover:not(:disabled),#pane-settings button.p:hover:not(:disabled){color:#fff;filter:brightness(1.1);box-shadow:0 4px 12px color-mix(in srgb,var(--acc) 60%,transparent)}
 button:disabled{cursor:not-allowed}
-#pane-practice button:disabled:not(.opt),#pane-slides button:disabled,#pane-meds button:disabled,#pane-notes button:disabled,#pane-ai button:disabled,#pane-settings button:disabled{opacity:.45;box-shadow:none;filter:grayscale(.35)}
+#pane-practice button:disabled:not(.opt),#pane-slides button:disabled,#pane-meds button:disabled,#pane-notes button:disabled,#pane-ai button:disabled,#pane-tutor button:disabled,#pane-settings button:disabled{opacity:.45;box-shadow:none;filter:grayscale(.35)}
 button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--acc) 60%,transparent);outline-offset:2px}
 /* top tabs: clearly clickable, selected tab is filled */
 #tabs button{background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);color:var(--ink);font-weight:500;cursor:pointer;transition:background .12s,border-color .12s}
@@ -111,8 +111,8 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid col
 .src a,.mex .m a,.atp,.lk,.mf .src a{text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 details.mcat>summary,.card>summary{cursor:pointer}
 /* dark theme: the accent is a light blue, so filled buttons and the selected tab use dark text for contrast */
-:root[data-theme=dark] #pane-practice button.p:not(.opt),:root[data-theme=dark] #pane-slides button.p,:root[data-theme=dark] #pane-meds button.p,:root[data-theme=dark] #pane-notes button.p,:root[data-theme=dark] #pane-ai button.p,:root[data-theme=dark] #pane-settings button.p,:root[data-theme=dark] #tabs button.on{color:#07101f}
-:root[data-theme=dark] #pane-practice button.p:not(.opt):hover:not(:disabled),:root[data-theme=dark] #pane-slides button.p:hover:not(:disabled),:root[data-theme=dark] #pane-meds button.p:hover:not(:disabled),:root[data-theme=dark] #pane-notes button.p:hover:not(:disabled),:root[data-theme=dark] #pane-ai button.p:hover:not(:disabled),:root[data-theme=dark] #pane-settings button.p:hover:not(:disabled){color:#07101f}
+:root[data-theme=dark] #pane-practice button.p:not(.opt),:root[data-theme=dark] #pane-slides button.p,:root[data-theme=dark] #pane-meds button.p,:root[data-theme=dark] #pane-notes button.p,:root[data-theme=dark] #pane-ai button.p,:root[data-theme=dark] #pane-tutor button.p,:root[data-theme=dark] #pane-settings button.p,:root[data-theme=dark] #tabs button.on{color:#07101f}
+:root[data-theme=dark] #pane-practice button.p:not(.opt):hover:not(:disabled),:root[data-theme=dark] #pane-slides button.p:hover:not(:disabled),:root[data-theme=dark] #pane-meds button.p:hover:not(:disabled),:root[data-theme=dark] #pane-notes button.p:hover:not(:disabled),:root[data-theme=dark] #pane-ai button.p:hover:not(:disabled),:root[data-theme=dark] #pane-tutor button.p:hover:not(:disabled),:root[data-theme=dark] #pane-settings button.p:hover:not(:disabled){color:#07101f}
 
 /* medication page: easier to read */
 .glance{border:2px solid var(--acc);border-radius:14px;padding:14px 16px;margin:6px 0 10px;background:color-mix(in srgb,var(--acc) 7%,var(--card))}
@@ -124,3 +124,10 @@ ul.plain{margin:0 0 8px;padding:0 0 0 20px}ul.plain li{font-size:16px;line-heigh
 details.mat,details.fda,details.about{margin:6px 0;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--card)}
 details.mat>summary,details.fda>summary,details.about>summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--acc)}
 details.fda .mf{border-style:dashed;background:transparent}
+
+/* tutor */
+.tstep{margin:12px 0;padding-bottom:10px;border-bottom:1px dashed var(--line)}.tstep:last-child{border-bottom:0}
+a.cite{color:var(--acc);cursor:pointer;text-decoration:underline;text-underline-offset:2px}a.tmed,a.tlk{color:var(--acc);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.cnote{font-size:13px;color:var(--mut);margin-bottom:8px}#tutor .cm p{margin:0 0 8px}#tutor .cm ul{margin:0 0 8px 18px;padding:0}#tutor .log{max-height:none}
+/* eight tabs now: keep each label on one line and let the bar scroll sideways on small windows */
+#tabs{overflow-x:auto;scrollbar-width:thin}#tabs button{white-space:nowrap;padding:8px 11px;flex:none}#tabs .logo{flex:none;margin-right:8px}

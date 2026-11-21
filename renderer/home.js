@@ -1,6 +1,6 @@
 // Title screen: animated logo + every tab as a button. Picking one hides it and the normal top tab bar takes over.
 (function(){
-const INFO={practice:['Practice','Tests, quizzes and Challenge mode'],slides:['Library','Class slides, ATI guide, glossary'],meds:['Medications','Every drug in six sections'],notes:['Web Notes','Answers saved from trusted sites'],game:['Game','A 15-question money-ladder quiz game'],ai:['Ask AI','Ask about your class material'],settings:['Settings','Theme, AI, updates']};
+const INFO={practice:['Practice','Tests, quizzes and Challenge mode'],slides:['Library','Class slides, ATI guide, glossary'],meds:['Medications','Every drug in six sections'],tutor:['Tutor','Learn a topic or fix your weak spots'],notes:['Web Notes','Answers saved from trusted sites'],game:['Game','A 15-question money-ladder quiz game'],ai:['Ask AI','Ask about your class material'],settings:['Settings','Theme, AI, updates']};
 const wave=(y,amp)=>{let d=`M0 ${y}`;for(let x=0;x<1600;x+=200)d+=` L${x+60} ${y} L${x+80} ${y-amp*.35} L${x+95} ${y+amp*.25} L${x+115} ${y-amp} L${x+135} ${y+amp*.7} L${x+155} ${y} L${x+200} ${y}`;return d};
 const logo=`<svg class="hlogo" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54" class="hring"/><path class="hcross" d="M50 26h20v24h24v20H70v24H50V70H26V50h24z"/><path class="hbeat" d="M10 64h26l8-18 12 38 10-28 6 8h38" pathLength="100"/></svg>`;
 const el=document.createElement('div');el.id='home';

@@ -5,6 +5,7 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
   if(b.dataset.t==='meds')window.medsShow&&window.medsShow();
   if(b.dataset.t==='notes')window.notesShow&&window.notesShow();
   if(b.dataset.t==='game')window.gameShow&&window.gameShow();
+  if(b.dataset.t==='tutor')window.tutorShow&&window.tutorShow();
   if(b.dataset.t==='settings')window.settingsShow&&window.settingsShow();
 });
 const tb=document.getElementById('theme');

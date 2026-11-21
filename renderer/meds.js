@@ -175,4 +175,5 @@ function detail(i){
   wireHead(i);
 }
 window.medsInit=()=>home();window.medsShow=()=>{};
+window.medsOpen=name=>{const d=D();if(!d)return;const m=d.meds.find(x=>x.name===name);if(!m)return;document.querySelector('[data-t=meds]').click();view='main';choosing=false;detail(m.i)};
 })();

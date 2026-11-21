@@ -263,5 +263,24 @@ console.assert(cls.length>=60&&missing.length===0,'every class-slide question an
 console.assert(QQ.bank.every(q=>new Set(q.o).size===q.o.length||q.id===371||q.id===498),'no question repeats an option (371 and 498 repeat in the source file itself)');
 console.assert(![241,243,244,245].some(id=>QQ.bank.some(q=>q.id===id)),'questions that were not on any slide were removed');
 console.log('class-slide wording tests ran:',cls.length,'questions');}
+// Tutor tab logic: weak spots, practice picks, trusted links, citations, the rules the tutor always gets
+{const TL=require('../renderer/tutorlogic.js');
+const QT=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,''));
+const t0=QT.bank.filter(q=>q.t===0).slice(0,4),t1=QT.bank.filter(q=>q.t===1).slice(0,4),a={};
+t0.forEach((q,i)=>a[q.id]={n:1,c:i===0?1:0,l:i===0?1:0,t:1});t1.forEach(q=>a[q.id]={n:1,c:1,l:1,t:1});
+const W=TL.weakSpots(QT,{a,mr:[{id:t0[1].id,t:1}]});
+console.assert(W.weak.length===1&&W.weak[0].i===0&&Math.round(W.weak[0].pct)===25&&W.weak[0].wrong===3&&W.weak[0].mr===1,'weak spot found from answers: topic with 1 of 4 right, 3 still wrong, 1 marked as rushed');
+console.assert(W.rest.some(x=>x.i===1)&&W.untried.length>5&&W.answered===8,'strong and untried topics are kept apart');
+console.assert(TL.weakSpots(QT,{a:{}}).weak.length===0&&TL.weakSpots(QT,null).answered===0,'no data means no weak spots');
+const qs=TL.questionsFor(QT,{topic:0,missed:W.weak[0].missed,limit:6});
+console.assert(qs.length===6&&W.weak[0].missed.every((id,i)=>qs[i].id===id),'practice picks start with the missed questions');
+const kq=TL.questionsFor(QT,{query:'lithium toxicity',limit:5});console.assert(kq.length>0&&kq.every(q=>/lithium|toxic/i.test(q.q+q.o.join(' ')+(q.r||''))),'keyword practice picks mention the topic');
+const L=TL.trustedLinks('heart failure & edema');console.assert(L.length===6&&L.every(l=>/^https:\/\//.test(l.url))&&L[0].url.includes(encodeURIComponent('heart failure & edema')),'trusted links are https and encode the topic');
+const dk=[{id:'d8',name:'Unit 8 - Cardiac'},{id:'ati',name:'ATI Comprehensive Predictor Study Guide'}];
+console.assert(TL.resolveCitation('Unit 8 - Cardiac','slide',36,dk).deckId==='d8'&&TL.resolveCitation('ATI Comprehensive Predictor Study Guide','page',87,dk).n===87&&TL.resolveCitation('Made Up Deck','slide',1,dk)===null,'citations link to real decks and unknown decks stay plain text');
+const lp=TL.lessonPrompt({topic:'Heart failure',pct:25,missed:[QT.bank[0]]});
+console.assert(/NCLEX-RN style/.test(lp)&&/\[Deck name, slide N\]/.test(lp)&&/ONE short check question/.test(lp)&&/25%/.test(lp)&&/Correct:/.test(lp),'lesson prompt: class first, cited, exam thinking, one check question, and the missed questions');
+console.assert(/Outside your class materials:/.test(TL.TUTOR_RULES)&&/Never invent doses/.test(TL.TUTOR_RULES)&&/Do not write web addresses/.test(TL.TUTOR_RULES)&&/not sure/.test(TL.TUTOR_RULES),'tutor rules forbid guessing, invented doses and made-up links');
+console.log('tutor tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
