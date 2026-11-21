@@ -9,7 +9,7 @@ let C=null,armed=false;
 const progress=()=>{try{const p=JSON.parse(localStorage.getItem('nur283_progress')||'null');return p&&p.a?p.a:{}}catch(e){return{}}};
 function categories(){
   const cats=G.categories(window.QD,window.MEDS,{all:true});
-  const h=progress(),missed=window.QD.bank.filter(q=>h[q.id]&&h[q.id].l===0);
+  const h=progress(),missed=window.QD.bank.filter(q=>!q.x&&h[q.id]&&h[q.id].l===0);
   if(missed.length)cats.splice(1,0,{key:'missed',group:'My progress',label:'Questions I missed',own:missed});
   return cats;
 }
@@ -17,7 +17,7 @@ const isRight=(t,k)=>Array.isArray(t.q.a)?t.q.a.includes(t.idx[k]):t.idx[k]===t.
 const correctIx=t=>t.idx.map((_,k)=>k).filter(k=>isRight(t,k));
 // Topics ranked by how you have been doing (same rule as Practice: at least 2 answers and under 75% = weak). You choose which to work on.
 function weakPanel(){
-  const h=progress(),D=window.QD,rows=D.top.map((name,i)=>{const qs=D.bank.filter(q=>q.t===i);let n=0,c=0;qs.forEach(q=>{const o=h[q.id];if(o){n+=o.n;c+=o.c}});return{i,name,total:qs.length,n,pct:n?Math.round(c/n*100):null}}).filter(r=>r.total>0);
+  const h=progress(),D=window.QD,rows=D.top.map((name,i)=>{const qs=D.bank.filter(q=>!q.x&&q.t===i);let n=0,c=0;qs.forEach(q=>{const o=h[q.id];if(o){n+=o.n;c+=o.c}});return{i,name,total:qs.length,n,pct:n?Math.round(c/n*100):null}}).filter(r=>r.total>0);
   rows.sort((a,b)=>(a.pct==null)-(b.pct==null)||(a.pct??0)-(b.pct??0));
   const missed=D.bank.filter(q=>h[q.id]&&h[q.id].l===0).length,any=rows.some(r=>r.n>0);
   return `<div class="cnt" style="margin-bottom:8px">${any?'Lowest scores first. Areas under 75% are ticked for you; change them however you like.':'You have not answered enough questions for me to find weak spots yet. Tick any areas you want to work on.'}</div>
@@ -41,7 +41,7 @@ async function setup(){
    <button class="p" style="width:100%" id="chgo">Start challenge</button><button style="width:100%;margin-top:10px" id="chbk">Back to Practice</button>`;
   const mode=()=>document.querySelector('input[name=chm]:checked').value;
   const weakSet=()=>{const ids=[...document.querySelectorAll('.wk:checked')].map(e=>+e.dataset.t);const seen=new Set(),own=[];
-    window.QD.bank.forEach(q=>{if(ids.includes(q.t)&&!seen.has(q.id)){seen.add(q.id);own.push(q)}});
+    window.QD.bank.forEach(q=>{if(!q.x&&ids.includes(q.t)&&!seen.has(q.id)){seen.add(q.id);own.push(q)}});
     if($('#wkm')&&$('#wkm').checked)(cats.find(c=>c.key==='missed')||{own:[]}).own.forEach(q=>{if(!seen.has(q.id)){seen.add(q.id);own.push(q)}});
     return{key:'weak',group:'My weak areas',label:'My weak areas: '+(ids.map(t=>window.QD.top[t]).join(', ')||'none chosen'),own}};
   const cur=()=>mode()==='weak'?weakSet():cats.find(c=>c.key===$('#chc').value);

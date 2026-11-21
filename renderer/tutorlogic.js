@@ -2,10 +2,11 @@
 (function(root){
 const nk=s=>String(s||'').toLowerCase().replace(/[’‘]/g,"'");
 // ---- what the student is weak at, from saved progress. P = {a:{id:{n,c,l,t}}, mr:[{id,t}]}
+const core=QD=>QD.bank.filter(q=>!q.x);   // outside (non-Galen) sets are left out of weak spots and picks
 function weakSpots(QD,P){
   P=P||{};const a=P.a||{},mr=P.mr||[];
   const all=QD.top.map((name,i)=>{
-    const qs=QD.bank.filter(q=>q.t===i);let n=0,c=0,seen=0;const missed=[];
+    const qs=core(QD).filter(q=>q.t===i);let n=0,c=0,seen=0;const missed=[];
     qs.forEach(q=>{const o=a[q.id];if(o){seen++;n+=o.n;c+=o.c;if(o.l===0)missed.push(q.id)}});
     const ids=new Set(qs.map(q=>q.id));
     return{i,name,total:qs.length,seen,n,c,pct:n?c/n*100:null,wrong:missed.length,missed,mr:mr.filter(e=>ids.has(e.id)).length};
@@ -21,11 +22,11 @@ const words=s=>[...new Set(nk(s).split(/[^a-z0-9]+/).filter(w=>w.length>=4&&!STO
 function questionsFor(QD,opts){
   opts=opts||{};const lim=opts.limit||10;let out=[];const seen=new Set();
   const add=q=>{if(q&&!seen.has(q.id)){seen.add(q.id);out.push(q)}};
-  if(opts.missed)opts.missed.forEach(id=>add(QD.bank.find(q=>q.id===id)));
-  if(opts.topic!=null)QD.bank.filter(q=>q.t===opts.topic).forEach(add);
+  if(opts.missed)opts.missed.forEach(id=>add(core(QD).find(q=>q.id===id)));
+  if(opts.topic!=null)core(QD).filter(q=>q.t===opts.topic).forEach(add);
   if(opts.query){
     const w=words(opts.query);
-    if(w.length){const sc=QD.bank.map(q=>{const st=nk(q.q),o=nk(q.o.join(' ')),r=nk(q.r||'');let s=0;w.forEach(x=>{if(st.includes(x))s+=3;if(o.includes(x))s+=1;if(r.includes(x))s+=1});return[s,q]}).filter(x=>x[0]>=3).sort((a,b)=>b[0]-a[0]);sc.forEach(x=>add(x[1]))}
+    if(w.length){const sc=core(QD).map(q=>{const st=nk(q.q),o=nk(q.o.join(' ')),r=nk(q.r||'');let s=0;w.forEach(x=>{if(st.includes(x))s+=3;if(o.includes(x))s+=1;if(r.includes(x))s+=1});return[s,q]}).filter(x=>x[0]>=3).sort((a,b)=>b[0]-a[0]);sc.forEach(x=>add(x[1]))}
   }
   return out.slice(0,lim);
 }

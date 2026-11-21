@@ -126,7 +126,17 @@ const ct=await coach({...cq,stage:'prompt'},{key:'k-test'});
 console.assert(ct==='Why that choice?'&&cb.h['x-api-key']==='k-test'&&!cb.b.tools&&cb.b.max_tokens<=500,'coach makes one plain call with no tools');
 let nk='';try{await coach({...cq,stage:'prompt'},{key:''})}catch(e){nk=String(e.message)}console.assert(/No API key/.test(nk),'coach needs a key');
 const allc=GL.categories(QDg,MDg,{all:true});
-console.assert(allc[0].own.length===QDg.bank.length&&allc[0].own.some(q=>Array.isArray(q.a)),'challenge categories include select-all questions');
+const coreN=QDg.bank.filter(q=>!q.x).length,xq=QDg.bank.filter(q=>q.x);
+console.assert(allc[0].own.length===coreN&&allc[0].own.some(q=>Array.isArray(q.a)),'challenge categories include select-all questions');
+// outside (non-Galen) study sets: flagged, labelled, kept out of every mixed list, and in their own group
+console.assert(xq.length>=240&&xq.every(q=>QDg.src[q.s].startsWith('Not Galen')&&QDg.top[q.t]==='Other study sets (not Galen)'),'outside sets are flagged, labelled "Not Galen" and in their own topic');
+console.assert(QDg.bank.filter(q=>!q.x).every(q=>!QDg.src[q.s].startsWith('Not Galen')),'no Galen question is labelled Not Galen');
+console.assert(allc.filter(c=>c.key!=='xs').every(c=>c.own.every(q=>!q.x)),'outside questions are not in any Galen category');
+console.assert(allc.some(c=>c.key==='xs'&&c.own.length===xq.length&&c.group==='Other study sets (not Galen)'),'outside questions have their own group');
+console.assert(xq.every(q=>q.o.length===4&&q.o.every(o=>o.length>1)&&new Set(q.o).size===4&&q.a>=0&&q.a<4&&q.r.includes('Not from Galen')),'outside questions have four distinct options, a valid key and a not-Galen note');
+{const TL=require('../renderer/tutorlogic.js');const w=TL.weakSpots(QDg,{a:Object.fromEntries(xq.slice(0,6).map(q=>[q.id,{n:3,c:0,l:0,t:1}]))});
+ console.assert(!w.all.some(t=>t.name==='Other study sets (not Galen)')&&w.answered===0,'Tutor weak spots ignore outside sets');
+ console.assert(TL.questionsFor(QDg,{query:'priority nursing action client',limit:200}).every(q=>!q.x),'Tutor picks never use outside sets');}
 const fp=buildPrompt({...cq,stage:'followup',explanation:'ECG first',coachFeedback:'Good start.',history:[{role:'user',content:'why not B?'},{role:'assistant',content:'Because...'}],ask:'what about C?',correct:[0],rationale:'SECRET-RATIONALE'});
 console.assert(fp.messages[0].role==='user'&&fp.messages.every((m,i)=>i===0||m.role!==fp.messages[i-1].role)&&fp.messages[fp.messages.length-1].role==='user','follow-up turns alternate user/assistant and end with the student');
 console.assert(/SECRET-RATIONALE/.test(fp.messages[0].content)&&/what about C\?/.test(fp.messages[fp.messages.length-1].content)&&fp.messages.some(m=>m.role==='assistant'&&/Good start/.test(m.content)),'follow-up includes the key, the coach feedback and the new question');

@@ -33,6 +33,7 @@ for f in sorted(glob.glob(os.path.join(ROOT,'data','seed','*','deck.json'))):
     for s in d['slides']:
         units.append((d['id'],kind,s['n'],s['title'],[norm(x) for x in s['text']]))
 qd=json.loads(open(os.path.join(ROOT,'data','questions.js')).read().split('window.QD=',1)[1].rstrip(';'))
+qd['bank']=[q for q in qd['bank'] if not q.get('x')]   # outside (non-Galen) study sets are not linked to medications
 
 # ---- deck/page mentions with context
 # Slides are short, so the whole slide is shown. ATI pages are long, so only the heading + its bullets

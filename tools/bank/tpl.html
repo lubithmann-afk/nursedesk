@@ -126,10 +126,11 @@ function mrStats(){
   const topics=Object.entries(byTopic).map(([t,n])=>({name:D.top[+t],n})).sort((a,b)=>b.n-a.n).slice(0,3);
   return{flags:flags.length,wrong,pct:wrong?Math.min(100,Math.round(flags.length/wrong*100)):0,wWrong,wFlag,topics,ids:[...new Set(flags.map(e=>e.id))]};
 }
-function missedIds(){return D.bank.filter(q=>P.a[q.id]&&P.a[q.id].l===0).map(q=>q.id)}
+const core=()=>D.bank.filter(q=>!q.x);   // outside (non-Galen) sets stay out of mixed pools, stats and weak areas
+function missedIds(){return core().filter(q=>P.a[q.id]&&P.a[q.id].l===0).map(q=>q.id)}
 function topicStats(){
   return D.top.map((name,i)=>{
-    const qs=D.bank.filter(q=>q.t===i);let n=0,c=0,seen=0;
+    const qs=core().filter(q=>q.t===i);let n=0,c=0,seen=0;
     qs.forEach(q=>{const o=P.a[q.id];if(o){seen++;n+=o.n;c+=o.c}});
     return{i,name,total:qs.length,seen,n,c,pct:n?c/n*100:null}
   });
@@ -177,7 +178,8 @@ function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const PT_NAMES=['Comp 1','Comp 2','Comp 3','Comp Bible'];
 const isDeck=s=>/^Class slides/.test(s);
 const isWq=s=>/^Weekly quiz/.test(s);
-const sn=i=>{const s=D.src[i];if(isWq(s))return s.replace(/^Weekly quiz\s*[–-]\s*/,'');if(isDeck(s))return s.replace(/^Class slides\s*[–-]\s*/,'').replace(/^Class slides/,'Imported');return PT_NAMES[i]||s};
+const isXs=s=>/^Not Galen/.test(s);
+const sn=i=>{const s=D.src[i];if(isWq(s))return s.replace(/^Weekly quiz\s*[–-]\s*/,'');if(isDeck(s))return s.replace(/^Class slides\s*[–-]\s*/,'').replace(/^Class slides/,'Imported');if(isXs(s))return s.replace(/^Not Galen\s*[–-]\s*/,'');return PT_NAMES[i]||s};
 const cnt=i=>D.bank.filter(q=>q.s===i).length;
 // Status per category. A check (or X) only when EVERY question in it has been answered; "-" (yellow) when started but not finished.
 // Finished sets age: green check < 2 days since you last practiced it, yellow check 2-6 days, red X after 7+ days.
@@ -194,19 +196,20 @@ function doneOpt(v,label,n){const st=statusOf(v);
 function paintDone(id){const S=$('#'+id),B=$('#dn_'+id);if(!S||!B)return;const st=statusOf(S.value);
   B.textContent=st?st.mark+' '+st.text:'';B.style.color=st?DONE_COL[st.k]:'';B.title=st?(st.k==='p'?'Started but not finished':'Finished; last practiced '+st.text):'Not started'}
 function poolRows(){
-  const pt=[],dk=[],wq=[];D.src.forEach((s,i)=>(isWq(s)?wq:isDeck(s)?dk:pt).push(i));
+  const pt=[],dk=[],wq=[],xs=[];D.src.forEach((s,i)=>(isXs(s)?xs:isWq(s)?wq:isDeck(s)?dk:pt).push(i));
   const sel=(id,idx)=>`<select id="${id}" class="dd">${idx.map(i=>doneOpt(i,sn(i),cnt(i))).join('')}</select>`;
-  return `<label class="row"><input type="radio" name="p" value="all" checked><div><b>All questions mixed</b><div class="cnt">${D.bank.length} questions</div></div></label>
+  return `<label class="row"><input type="radio" name="p" value="all" checked><div><b>All questions mixed</b><div class="cnt">${core().length} questions</div></div></label>
    <label class="row"><input type="radio" name="p" value="missed" id="rm"><div><b>Only questions I missed</b><div class="cnt" id="mc"></div></div></label>
    <label class="row"><input type="radio" name="p" value="weak" id="rw"><div><b>Practice my weak areas</b><div class="cnt" id="wc"></div></div></label>
    <label class="row"><input type="radio" name="p" id="rpt" value="${pt[0]}"><div style="flex:1"><b>Practice tests</b> <span class="dn" id="dn_spt"></span>${sel('spt',pt)}</div></label>
    ${dk.length?`<label class="row"><input type="radio" name="p" id="rdk" value="${dk[0]}"><div style="flex:1"><b>Class PowerPoints</b> <span class="dn" id="dn_sdk"></span>${sel('sdk',dk)}</div></label>`:''}
+    ${xs.length?`<label class="row"><input type="radio" name="p" id="rxs" value="${xs[0]}"><div style="flex:1"><b>Other study sets (not Galen)</b> <span class="dn" id="dn_sxs"></span>${sel('sxs',xs)}<div class="cnt">Outside questions, not from Galen. Use them for extra practice only; they are left out of "All questions mixed" and your weak-area lists.</div></div></label>`:''}
    ${wq.length?`<label class="row"><input type="radio" name="p" id="rwq" value="wq"><div style="flex:1"><b>Weekly quizzes</b> <span class="dn" id="dn_swq"></span><select id="swq" class="dd">${doneOpt('wq','All weekly quizzes',D.bank.filter(q=>isWq(D.src[q.s])).length)}${wq.map(i=>doneOpt(i,sn(i),cnt(i))).join('')}</select></div></label>`:''}`;
 }
 function home(){
   const sr=savedRun();const ans=sr?sr.run.filter(x=>x.pick!==null).length:0;
   app.innerHTML=`<h1>NUR 283 Comp Practice Tests</h1>
-  <p class="sub">${D.bank.length} questions from your six PDFs, with an NCLEX-style rationale after every answer.</p>
+  <p class="sub">${core().length} questions from your six PDFs, with an NCLEX-style rationale after every answer.</p>
   ${sr?`<div class="card" style="border-color:var(--acc)"><h2>Unfinished test</h2><div class="cnt" style="margin-bottom:10px">${ans} of ${sr.run.length} answered. Pick up where you left off.</div><button class="p" style="width:100%" id="rsm">Resume test</button><button style="width:100%;margin-top:8px" id="dsc">Discard this test</button></div>`:''}
   <div class="card"><h2>1. Choose a question pool</h2><div class="cnt" style="margin-bottom:8px">Check marks need every question in the set answered: <span style="color:#2e9e5b">✓ green</span> within 2 days, <span style="color:#c99700">✓ yellow</span> after 2 days, <span style="color:#d64545">✗ red</span> after a week. <span style="color:#c99700">–</span> means started but not finished.</div>${poolRows()}</div>
   <div class="card"><h2>2. How many questions?</h2><div class="big" id="n">50</div>
@@ -221,15 +224,15 @@ function home(){
   if(sr){$('#rsm').onclick=resume;const d=$('#dsc');d.onclick=()=>{d.textContent='Tap again to discard';d.onclick=discardRun}}
   const upd=()=>{const p=document.querySelector('input[name=p]:checked').value;const pool=getPool(p);const r=$('#r');r.max=Math.min(50,Math.max(1,pool.length));if(+r.value>+r.max)r.value=r.max;$('#n').textContent=r.value;$('#note').textContent=pool.length+' in pool';$('#go').disabled=pool.length===0};
   {$('#mc').textContent=missedIds().length+' still marked wrong (saved)';const wt=weakTopics();$('#wc').textContent=wt.length?wt.slice(0,3).map(s=>s.name).join(', ')+(wt.length>3?'…':''):'Answer more questions to find them'}
-  ['spt','sdk','swq'].forEach(paintDone);
-  [['spt','rpt'],['sdk','rdk'],['swq','rwq']].forEach(([s,r])=>{const S=$('#'+s);if(!S)return;S.onclick=e=>e.stopPropagation();S.onchange=()=>{paintDone(s);const R=$('#'+r);R.value=S.value;R.checked=true;R.dispatchEvent(new Event('change'))}});
+  ['spt','sdk','swq','sxs'].forEach(paintDone);
+  [['spt','rpt'],['sdk','rdk'],['swq','rwq'],['sxs','rxs']].forEach(([s,r])=>{const S=$('#'+s);if(!S)return;S.onclick=e=>e.stopPropagation();S.onchange=()=>{paintDone(s);const R=$('#'+r);R.value=S.value;R.checked=true;R.dispatchEvent(new Event('change'))}});
   document.querySelectorAll('input[name=p]').forEach(e=>e.onchange=()=>{upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value});
   $('#r').oninput=()=>$('#n').textContent=$('#r').value;
   upd();$('#r').value=$('#r').max;$('#n').textContent=$('#r').value;
   $('#go').onclick=()=>start(document.querySelector('input[name=p]:checked').value,+$('#r').value,$('#sh').checked);
 }
-function getPool(p){if(p==='all')return D.bank;if(p==='wq')return D.bank.filter(q=>isWq(D.src[q.s]));if(p==='missed'){const m=missedIds();return D.bank.filter(q=>m.includes(q.id))}
-  if(p==='weak'){const w=weakTopics().map(s=>s.i);const m=missedIds();return D.bank.filter(q=>w.includes(q.t)||m.includes(q.id))}
+function getPool(p){if(p==='all')return core();if(p==='wq')return D.bank.filter(q=>isWq(D.src[q.s]));if(p==='missed'){const m=missedIds();return D.bank.filter(q=>m.includes(q.id))}
+  if(p==='weak'){const w=weakTopics().map(s=>s.i);const m=missedIds();return core().filter(q=>w.includes(q.t)||m.includes(q.id))}
   if(p[0]==='t')return D.bank.filter(q=>q.t===+p.slice(1));return D.bank.filter(q=>q.s===+p)}
 function start(p,n,sh){
   let pool=getPool(p);pool=sh?shuffle(pool):pool.slice();pool=pool.slice(0,n);
@@ -281,13 +284,13 @@ function results(){
   $('#h').onclick=home;$('#ip').onclick=improve;$('#rt').onclick=()=>start('missed',50,true);
 }
 function improve(){
-  const ts=topicStats(),seenQ=Object.keys(P.a).length,tot=D.bank.length;
+  const ts=topicStats(),seenQ=Object.keys(P.a).filter(k=>core().some(q=>String(q.id)===k)).length,tot=core().length;
   let n=0,c=0;for(const k in P.a){n+=P.a[k].n;c+=P.a[k].c}
   const pct=n?Math.round(c/n*100):0,mi=missedIds();
   const col=p=>p>=80?'var(--ok)':p>=65?'#d9a300':'var(--bad)';
   const ranked=ts.filter(s=>s.n>0).sort((a,b)=>a.pct-b.pct);
   const unseen=ts.filter(s=>s.n===0);
-  const worst=D.bank.filter(q=>P.a[q.id]&&P.a[q.id].n-P.a[q.id].c>0).sort((a,b)=>{const x=P.a[a.id],y=P.a[b.id];return (y.n-y.c)-(x.n-x.c)||(x.l-y.l)||y.t-x.t}).slice(0,10);
+  const worst=core().filter(q=>P.a[q.id]&&P.a[q.id].n-P.a[q.id].c>0).sort((a,b)=>{const x=P.a[a.id],y=P.a[b.id];return (y.n-y.c)-(x.n-x.c)||(x.l-y.l)||y.t-x.t}).slice(0,10);
   const wt=weakTopics(),ms=mrStats();
   app.innerHTML=`<h1>My progress</h1><p class="sv" id="sv"></p>
   ${n?`<div class="stat"><div><b>${pct}%</b><span>overall</span></div><div><b>${n}</b><span>answers</span></div><div><b>${seenQ}/${tot}</b><span>seen</span></div><div><b>${mi.length}</b><span>still wrong</span></div></div>`:'<div class="card"><div class="cnt">No answers yet. Take a test and your results will show up here.</div></div>'}

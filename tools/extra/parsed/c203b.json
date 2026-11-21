@@ -1,0 +1,1152 @@
+[
+ {
+  "n": 1,
+  "q": "The nurse preceptor is observing a newly hired nurse insert an indwelling urethral catheter into a female client. Which of the following actions performed by the newly hired nurse requires follow up by the nurse preceptor?",
+  "o": [
+   "Selecting a 16F catheter with a 10ml balloon",
+   "Immediately obtaining a urine specimen from the drainage bag",
+   "Cleaning the meatus with antiseptic swab after cleaning both labial folds",
+   "Inflating the catheter balloon as soon as a return of urine is noted in the tubing (once you get return advance an additional 1-2inches)"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "Urine specimens should be obtained from the sampling port, not the drainage bag, because the bag may contain contaminated urine."
+  }
+ },
+ {
+  "n": 2,
+  "q": "The nurse is caring for a client and administers the wrong drug. The nurse performs an assessment and does not identify any adverse effects. Which of the following actions should the nurse take next?",
+  "o": [
+   "Notify the client’s primary health care provider (PHCP).",
+   "Complete an incident report.",
+   "Ask the client if they have taken the medication in the past.",
+   "Document client status in the medical record."
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "After assessing the client, the nurse should immediately notify the provider regarding the medication error. Documentation and incident reports follow."
+  }
+ },
+ {
+  "n": 3,
+  "q": "The nurse has received the change of shift report and is assigning task to an unlicensed assistive personnel (UAP). Which of the following tasks should the nurse instruct the UAP to perform first?",
+  "o": [
+   "Recheck the vital signs of a client who returned from a liver biopsy 2 hours ago",
+   "Deliver a lunch tray to a client who is returning from radiology and has been NPO since breakfast.",
+   "Turn and reposition a client who was last turned 2 hours ago",
+   "Obtain a sputum specimen from a client who has suspected pulmonary tuberculosis (TB)"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "A client returning from a liver biopsy is at risk for hemorrhage; vital signs are the priority assessment."
+  }
+ },
+ {
+  "n": 4,
+  "q": "The nurse is caring for assigned clients. Which of the following actions is appropriate for the nurse to take?",
+  "o": [
+   "Placing a client who had a stem cell transplant on contact precautions",
+   "Having a client with pertussis wear a particulate respirator (N95) mask during transport",
+   "Initiating airborne precautions for the client diagnosed with epiglottitis",
+   "Wearing a particulate respirator (N95) mask when caring for a client who has disseminated varicella zoster"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Disseminated varicella requires airborne and contact precautions; an N95 respirator is required."
+  }
+ },
+ {
+  "n": 5,
+  "q": "The nurse is caring for a client who has been receiving prescribed warfarin for the past 2 weeks. Which of the following lab values indicates that the client is having a therapeutic response to the medication?",
+  "o": [
+   "A prothrombin time (PT) of 15 seconds",
+   "A platelet count that has increased from 100,000 to 150,000mm",
+   "An international normalized ratio (INR) of 2 seconds",
+   "An activated partial thromboplastin time (aPTT) that has increased from 30 to 60 seconds"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Therapeutic INR for warfarin is generally 2–3."
+  }
+ },
+ {
+  "n": 6,
+  "q": "The nurse is assessing a client who has diabetes mellitus (type 1), a blood glucose level of 725mg/dL, and a diagnosis of hyperglycemic-hyperosmolar state (HHS). Which of the following assessment findings should the nurse expect the client to have?",
+  "o": [
+   "Positive urine ketones",
+   "Fluid Volume deficit",
+   "A serum pH less than 7.35",
+   "Kussmaul respirations"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "HHS causes profound dehydration and fluid volume deficit. Ketosis and acidosis are usually absent."
+  }
+ },
+ {
+  "n": 7,
+  "q": "The nurse working on the medical surgical unit has just received a hand off report on assigned clients. The nurse should first plan to assess the client who has",
+  "o": [
+   "Acute pancreatitis and is reporting radiation of pain to the left shoulder",
+   "Myasthenia gravis and is experiencing ptosis and diplopia",
+   "Atrial fibrillation (AF) and reports severe pain in the right lower extremity",
+   "Chronic obstructive pulmonary disease (COPD) who intermittently coughs up a moderate amount of secretions"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Severe leg pain in a client with atrial fibrillation suggests arterial embolism and impaired perfusion requiring immediate intervention."
+  }
+ },
+ {
+  "n": 8,
+  "q": "The nurse is caring for a client who has Addison disease and is at risk for Addison crisis. Which of the following actions should the nurse take?",
+  "o": [
+   "Provide a low carbohydrate diet",
+   "Monitor blood pressure frequently",
+   "Administer oral desmopressin",
+   "Restrict fluid intake"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "Addisonian crisis can cause severe hypotension; frequent BP monitoring is essential."
+  }
+ },
+ {
+  "n": 9,
+  "q": "The nurse is caring for a client who has a new prescription for knee high anti embolism stockings. Which of the following actions should the nurse take?",
+  "o": [
+   "Fold the top of the stockings over if they are too long",
+   "Remove the stockings once each day for 1 hour",
+   "Make sure the stockings are tight around the clients toes",
+   "Measure the circumference and length of the clients calf"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Proper fit requires measuring calf circumference and length before application."
+  }
+ },
+ {
+  "n": 10,
+  "q": "The nurse working in the emergency department (ED) is precepting a newly hired nurse. It requires intervention by the preceptor if the newly hired nurse",
+  "o": [
+   "Gently massages the fingers of a client who has frostbite",
+   "Refuses to give prescribed lorazepam to a client who is anxious and needs to sign a consent form",
+   "Removes the pants of a client with chemical burns to the lower extremities by cutting them off",
+   "Places a client who has a temperature of 104.5 F on a cooling blanket"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Frostbitten tissue should never be massaged because it increases tissue damage."
+  }
+ },
+ {
+  "n": 11,
+  "q": "The nurse working in a pediatric health clinic has assessed the following clients. Which client findings indicates to the nurse the presence of a developmental delay?",
+  "o": [
+   "A 1 month old who does not have head control",
+   "A 3 month old who does not roll over",
+   "A 9 month old who does not sit without support",
+   "A 10 month old who does not drink from a cup"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "A 9-month-old should sit independently. Failure to do so suggests developmental delay."
+  }
+ },
+ {
+  "n": 12,
+  "q": "The nurse is caring for a client who has an anxiety disorder and has begun having a panic attack. Which of the following actions should the nurse take first?",
+  "o": [
+   "Ask the client what led to the attack",
+   "Offer the client a prescribed PRN antianxiety medication",
+   "Tell the client the nurse will stay with them",
+   "Take the client outside for mild exercise"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "During a panic attack, the priority is to remain with the client and provide reassurance and safety."
+  }
+ },
+ {
+  "n": 13,
+  "q": "The nurse is teaching the partner of a client who had a stroke and has developed dysphagia. Which of the following statements by the clients partner indicates the need for additional teaching?",
+  "o": [
+   "I will provide my partner with fruits that are juicier and softer to swallow",
+   "I should serve meals to my partner when they are feeling the strongest",
+   "I will make sure that my partner tilts the head forward while eating",
+   "I should monitor my partner for pocketing food in the mouth while eating"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Juicy foods may increase aspiration risk in dysphagia clients."
+  }
+ },
+ {
+  "n": 14,
+  "q": "The nurse is caring for a client who is 12 hours postoperative from a transurethral resection of the prostate(TURP). Which of the following should the nurse include in the clients plan of care?",
+  "o": [
+   "Maintain the bladder irrigation flow rate to keep urine a light pink color",
+   "I will be able to take this medication while I am pregnant",
+   "I will notify my primary health care provider immediately if I develop a sore throat",
+   "It is normal to develop bruising while taking this medication"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Following TURP with continuous bladder irrigation, urine should remain light pink."
+  }
+ },
+ {
+  "n": 15,
+  "q": "The nurse is caring for a client who has an infection and has been prescribed gentamicin intermittent IV bolus Q8hr. A peak and trough level is required with the new order. Which of the following actions is correct for the nurse to take?",
+  "o": [
+   "Draw a trough level immediately prior to administering the medication and a peak level 30 min after the dose",
+   "Draw a peak level 90 min prior to administering the medication and a peak level 30 min after the dose",
+   "Draw a peak level at 0900 hours and a trough level at 2100",
+   "Draw a trough level at 0900 hours and a peak level at 2100"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Aminoglycoside trough levels are drawn immediately before administration; peak levels are drawn approximately 30 minutes after infusion."
+  }
+ },
+ {
+  "n": 16,
+  "q": "The nurse is teaching individuals at a community health fair about guidelines for health related screenings, examinations, and immunizations. It is correct for the nurse to state that",
+  "o": [
+   "Children age 5 and older should receive the pneumococcal vaccine every year",
+   "Children who are between the ages of 10 to 14 should be screened annually for scolosis",
+   "Men age 40 and over who are at average risk for prostate cancer should have a prostate specific antigen (PS) test performed every 5 years.",
+   "Men and women age 50 and older should have a colonoscopy every 2 years"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "School-age children are commonly screened annually for scoliosis during adolescence."
+  }
+ },
+ {
+  "n": 17,
+  "q": "The nurse has attended a conference on informed consent. It indicates a correct understanding of the teaching if the nurse states that informed consent",
+  "o": [
+   "Is an agreement to receive medical treatment that cant be revoked once signed",
+   "Forms must be signed when a client is competent to make an informed decision",
+   "Is signed by the nurse to indicate that the client understands the procedure",
+   "Is the nurses responsibility to explain the risks, benefits, and alternative treatments"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "Clients must be competent when signing informed consent."
+  }
+ },
+ {
+  "n": 18,
+  "q": "The nurse is caring for a client who has been receiving prescribed warfarin for the past 2 weeks. Which of the following lab values indicates that the client is having a therapeutic response to the medication?",
+  "o": [
+   "A prothrombin time (PT) of 15 seconds",
+   "A platelet count that has increased from 100,000 to 150,000 mm",
+   "An international normalized ratio (INR) of 2 seconds",
+   "An activated partial thromboplastin time (aPTT) that has increased from 30 to 60 seconds"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Therapeutic INR for warfarin is approximately 2–3."
+  }
+ },
+ {
+  "n": 19,
+  "q": "The nurse is preparing a client who has pneumonia for percussion, vibration, and postural drainage. Which of the following actions is most important for the nurse to take prior to performing this treatment?",
+  "o": [
+   "Review the clients most recent arterial blood gas (ABG) result",
+   "Instruct the client how to slowly inhale using pursed lips",
+   "Assess the character and consistency of the clients sputum",
+   "Auscultate the clients breath sounds"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Breath sounds should be assessed before chest physiotherapy to establish a baseline."
+  }
+ },
+ {
+  "n": 20,
+  "q": "The nurse is caring for a client who has terminal cancer and is receiving intravenous (IV) morphine sulfate 1 mg every 2 hours for pain. The medication is dispensed as a prefilled injectable of 2mg/ml. Which of the following actions should the nurse take?",
+  "o": [
+   "Use a 1ml syringe to remove 1 mg of the medication from the prefilled injectable for later use",
+   "Administer 1mg of the medication from the prefilled injectable and lock up the remaining 1mg",
+   "Have another nurse witness the waste of 1mg of the medication from the prefilled injectable prior to administration",
+   "Admin 1 mg of the medication from the prefilled injectable and then have another nurse witness the waste of the remaining medication"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Controlled substances require a witness when wasting unused medication."
+  }
+ },
+ {
+  "n": 21,
+  "q": "The nurse is preparing to teach a client who has anemia and a new prescription for liquid ferrous sulfate. Which of the following instructions should the nurse include in the teaching?",
+  "o": [
+   "Take the medication after dinner to avoid daytime drowsiness",
+   "The medication can be taken with milk to prevent gastrointestional irritation",
+   "Do not mix the medication with any other medications, foods, or liquids",
+   "Eat plenty of iron rich foods such as beans and green leafy vegetables"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Iron-rich foods enhance treatment of anemia."
+  }
+ },
+ {
+  "n": 22,
+  "q": "The nurse has instructed a female client on how to collect a midstream urine specimen. Which of the following client statements indicates a correct understanding of the teaching?",
+  "o": [
+   "Since I am right handed, I will use my left hand to spread the labia apart",
+   "I will use the provided towelette to cleanse the area using a back and forth motion",
+   "To collect the specimen I will urinate in the container and then finish urinating in the toilet",
+   "I will hold the specimen container against the skin while collecting the urine sample"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "The nondominant hand should spread the labia while the dominant hand collects the specimen."
+  }
+ },
+ {
+  "n": 23,
+  "q": "The nurse has instructed a client who has lung cancer and is receiving external radiation therapy. Which of the following statements by the client indicates a need for further teaching?",
+  "o": [
+   "I will use a washcloth with an antibacterial soap and water to cleanse the radiation area every day",
+   "I will need to prevent direct skin exposure to the sun during treatment and for at least 1 year afterward",
+   "I should avoid applying any moisturizers, creams, lotions, or powders to the radiation area unless prescribed by my doctor",
+   "It will be safe for me to be around my daughter, who is pregnant, and my grandchildren while I am receiving treatments."
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Radiation sites should be washed gently with mild soap; antibacterial soaps may irritate skin."
+  }
+ },
+ {
+  "n": 24,
+  "q": "A nurse preceptor is working with a newly hired nurse who is preparing to perform a sterile dressing change. Which of the following actions by the newly hired nurse requires interventions by the nurse preceptor?",
+  "o": [
+   "Opening the sterile tray by first unfolding the flap closest to the nurse’s body",
+   "Putting on clean gloves prior to opening the outer package",
+   "Placing a sterile dressing at least 2 inches from the border on the sterile field",
+   "Holding a sterile item at just above the waist level"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "The flap closest to the nurse should be opened last to avoid contamination."
+  }
+ },
+ {
+  "n": 25,
+  "q": "The nurse is caring for an antepartum client whose laboratory test results reveal a negative rubella titer. The client asks the nurse what this laboratory test result means. Which of the following statement is correct for the nurse to make to the client?",
+  "o": [
+   "You are not experiencing an infection caused by rubella at this time",
+   "You will require the rubella immunization following the delivery of your baby",
+   "You will need to receive the rubella immunization at your next prenatal visit",
+   "You are immune to the rubella virus and cannot pass rubella on to your baby"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "A negative rubella titer indicates nonimmunity; vaccination is given postpartum."
+  }
+ },
+ {
+  "n": 26,
+  "q": "The nurse manager preparing an inservice regarding legal issues and client care. Which of the following is a correct example for the nurse manager to give guring the in service?",
+  "o": [
+   "Battery is having security keep a client in their room when they want to leave against medical advice (AMA).",
+   "Using a recliners attached lap tray to keep the client in the chair is considered assault",
+   "Malpractice is applying restraints without an order from the primary health care provider (PHCP)",
+   "Defamation is posing inaccurate information regarding a coworker on social media"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Posting false information about a coworker is defamation (libel)."
+  }
+ },
+ {
+  "n": 27,
+  "q": "The nurse is caring for a client who weighs 150lbs (68kg) and has developed hepatic encephalopathy. It is priority for the nurse to notify the primary health care provider if the client develops",
+  "o": [
+   "A decrease in urine output to 450ml/day",
+   "A change in pupil size from 7 to 5mm",
+   "The presence of hand flapping",
+   "The development of musty odor to the breath"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Urine output less than 30 mL/hr (720 mL/day) indicates worsening hepatic dysfunction and requires provider notification."
+  }
+ },
+ {
+  "n": 28,
+  "q": "The nurse has received report for the following clients. The nurse should firs t asses the client who",
+  "o": [
+   "Had a stroke 24hrs ago and has become restless and irritable",
+   "Has meningitis and reports a headache and photosensitivity",
+   "Has an abdominal aneurysm and has mild lower back pain",
+   "Has epilepsy and remains drowsy 30 minutes after a seizure"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Restlessness and irritability after stroke may indicate increased ICP and require immediate assessment."
+  }
+ },
+ {
+  "n": 29,
+  "q": "The nurse working in the emergency department (ED) is precepting a newly hired nurse. It requires intervention by the preceptor if the newly hired nurse",
+  "o": [
+   "Gently massages the fingers of a client with frostbite",
+   "Refuses to give prescribed lorazepam to a client who is anxious and needs to sign a consent form",
+   "Removes the pants of a client with chemical burns to the lower extremities by cutting them off",
+   "Places a client who has a temperature of 104.5 degrees F on a cooling blanket"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Frostbitten tissue should not be massaged."
+  }
+ },
+ {
+  "n": 30,
+  "q": "The nurse is teaching a parent of the newborn about infant nutrition. Which of the following statements, if made by the parent, requires follow up by the nurse",
+  "o": [
+   "“I will give my 2-month-old infant a supplement of plain water if my infant develops loose stools”",
+   "“The fatty acids contained in breast milk are important for neurological development and visibility function”",
+   "“Iron from human milk is better absorbed than iron from fortified formula and infant cereals”",
+   "“I can begin introduce rice cereal to my baby at 6 months of age”"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Infants younger than 6 months should not receive water supplementation."
+  }
+ },
+ {
+  "n": 31,
+  "q": "The nurse is admitting a client following a sexual assault. The client has cuts and bruises on the face, hands, and chest. What should the nurse initially say to the client.",
+  "o": [
+   "“I am sorry this happened”",
+   "“You are safe now”",
+   "“I will take some pictures of your injuries when you are ready”",
+   "“Do you have a family member or a friend I can call for you”"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "Establishing safety is the priority after sexual assault."
+  }
+ },
+ {
+  "n": 32,
+  "q": "The nurse working in a local health department is preparing to administer an influenza vaccine via IM injection. The nurse should question the administration of the vaccine to an individual who is",
+  "o": [
+   "27yr old female who is eight weeks pregnant and has a toddler at home",
+   "35yr old female who lives with a family member who has HIV",
+   "42yr old female who is allergic to eggs and has had a fever for 3 days",
+   "79yr old male who has a history of hypertension and diabetes mellitus (type 2)"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Fever and severe egg allergy may contraindicate influenza vaccination depending on vaccine type and severity."
+  }
+ },
+ {
+  "n": 33,
+  "q": "The nurse has a prescription to administer subcutaneous enoxaparin to an assigned client. Which of the following actions should the nurse take?",
+  "o": [
+   "Aspirate the blood prior to injecting the medication",
+   "Check the most current prothrombin time (PT)",
+   "Retain the air bubble while injecting the medication",
+   "Insert the needle in the skin at a 15-degree angle"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "The air bubble should be retained when administering enoxaparin to ensure full medication delivery."
+  }
+ },
+ {
+  "n": 34,
+  "q": "The nurse is caring for a client who has sustained severe burn injuries to the anterior portion of the right and left arms, and the entire front torso. Based on the rules of nines, the nurse calculated the estimated percentage of burned total body surface area (TBSA) as",
+  "o": [
+   "27%",
+   "36%",
+   "45%",
+   "54%"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "Anterior right arm (4.5%) + anterior left arm (4.5%) + anterior trunk (18%) = 27%? Actually both entire anterior arms count 9% total plus anterior torso 18% = 36%."
+  }
+ },
+ {
+  "n": 35,
+  "q": "The nurse is caring for a pediatric client who is postoperative following a VP shunt placement. The nurse should position the client",
+  "o": [
+   "In Tredelenburg",
+   "Prone",
+   "On the nonproductive side",
+   "In high-Fowler"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Following VP shunt placement, positioning on the nonoperative side helps prevent pressure on the shunt."
+  }
+ },
+ {
+  "n": 36,
+  "q": "The nurse is preparing to administer prescribed medications to the following clients. The nurse should questions the prescription for the client who is receiving the",
+  "o": [
+   "Angiotensin-receptor blocker, losartan, and has a blood pressure of 168/94 mm Hg",
+   "Calcium-channel blocker, diltiazem, and has 1+ nonpitting edema",
+   "Alpha blocker, terazosin, and is reporting a headache",
+   "Thiazide diuretic, hydrochlorothiazide, and is reporting leg cramps"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Leg cramps may indicate hypokalemia caused by hydrochlorothiazide and warrant evaluation."
+  }
+ },
+ {
+  "n": 37,
+  "q": "The nurse is caring for a client who is 4 hours postpartum following a vaginal delivery. The client has saturated a perineal pad in a timeframe of 10 minutes, which of the following actions should the nurse take first?",
+  "o": [
+   "Measure the blood pressure",
+   "Assess for a distended bladder",
+   "Massage the fungus",
+   "Administer oxytocin"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Excessive bleeding postpartum suggests uterine atony; fundal massage is the first action."
+  }
+ },
+ {
+  "n": 38,
+  "q": "The nurse working in the labor and delivery unit is caring in labor whose membranes just spontaneously ruptured. Which of the following findings would be a priority for the nurse to report to the primary health care provider?",
+  "o": [
+   "Contractions lasting 60 seconds",
+   "Four contractions in a 10 minute period",
+   "A maternal temperature of 99.5 degree F",
+   "Appearance of bloody fluid from the vagina"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Bloody vaginal fluid after membrane rupture may indicate placental abruption or vasa previa."
+  }
+ },
+ {
+  "n": 39,
+  "q": "The nurse is teaching a client who has multiple sclerosis (MS) about a new prescription for baclofen. Which of the following instructions should the nurse include in the teaching?",
+  "o": [
+   "“Do not take diphenhydramine with this medication”",
+   "“Be sure and take this medication on an empty stomach”",
+   "“Stop taking the medication if you develop headaches”",
+   "“You can expect some diarrhea during the first week of taking this medication”"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Baclofen causes CNS depression; diphenhydramine can worsen sedation."
+  }
+ },
+ {
+  "n": 40,
+  "q": "The nurse preceptor is observing a newly hired nurse care who is receiving continuous tube feedings via a g-tube. Which of the following actions by the newly newly hired nurse requires immediate intervention by the nurse preceptor?",
+  "o": [
+   "Discarding an old irrigation set that is 24 hours old.",
+   "Maintaining the head of bed at 40-45 degree angle",
+   "Adding 2 drops of food coloring to the feeding tube",
+   "Checking the g-tube residual every 4 hours."
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "Food coloring should never be added to enteral feedings because aspiration may go undetected."
+  }
+ },
+ {
+  "n": 41,
+  "q": "The nurse working in the emergency department is triaging clients. Which of the following should the nurse classify as non urgent?",
+  "o": [
+   "A client who has a fractured femoral artery",
+   "A client who has multiple fractures to both arms",
+   "A client who has a red rash over the abdomen",
+   "A client who reports left flank pain"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "A localized abdominal rash is considered nonurgent."
+  }
+ },
+ {
+  "n": 42,
+  "q": "The nurse preceptor is observing a newly hired nurse care for a client who is receiving a transfusion of packed red blood cells. The client develops chills, flushing of the skin, and reports back pain. The newly hired nurse stops the transfusion and implements the following actions. Which action requires immediate intervention by by the nurse preceptor.",
+  "o": [
+   "Initiating a 0.9% sodium chloride infusion through new intravenous tubing",
+   "Collecting a urine and blood specimen to send to the laboratory",
+   "Disposing of the blood transfusion bag and tubing in the biohazard container",
+   "Checking that the information on the blood transfusion bag matches the clients information"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "C"
+   ],
+   "extra": "",
+   "why": "The blood bag and tubing must be saved for investigation, not discarded."
+  }
+ },
+ {
+  "n": 43,
+  "q": "The nurse is caring for a client who has a new prescription for knee-high embolism stockings. Which of the following actions should the nurse take?",
+  "o": [
+   "Fold the top of the stockings over if they are too long",
+   "Remove the stockings once each day for 1 hour",
+   "Make sure the stockings are tight around the client’s toes",
+   "Measure the circumference and length of the client’s calf"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Proper fitting requires calf measurements."
+  }
+ },
+ {
+  "n": 44,
+  "q": "The nurse is assessing assigned clients for hospice services. The nurse should recommend hospice care for a client who",
+  "o": [
+   "Has diabetes mellitus and has developed CKD",
+   "Has terminal cancer and needs assistance with pain management at home",
+   "Has dysphasia due to a stroke and needs administration of gastric g tube feedings",
+   "Has dementia and needs assistance with activities of ADLS"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "Hospice is appropriate for terminal illness with comfort-focused care needs."
+  }
+ },
+ {
+  "n": 45,
+  "q": "The registered nurse is planning care for clients and is assigning tasks to a licensed practical nurse(LPN) in an unlicensed assisted personnel (UAP). Which of the following tasks is best for the RN to assign to the LPN?",
+  "o": [
+   "Collection of past medical history for a client who has admitted with cellulitis",
+   "Recording the output for a client who has just urinated in the collection container of the toilet",
+   "Assisting with the delivery of breakfast trays to the client",
+   "Development of a plan of care for a client who is postoperative from a cholecystitis."
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "LPNs may collect data such as health histories; UAPs cannot perform assessments."
+  }
+ },
+ {
+  "n": 46,
+  "q": "The nurse is preparing to administer an intramuscular injection to an adult client. Which of the following actions is appropriate for the nurse to take?",
+  "o": [
+   "Limit the amount of medication to 4 mL when injecting into the deltoid muscle",
+   "Hold the skin taut when using the Z-track method",
+   "Use the deltoid site if the client is an adult who requires 3 mL of medication",
+   "Draw up an air bubble into the syringe after the medication has been prepared"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "An air-lock technique may be used with IM injections to prevent medication tracking."
+  }
+ },
+ {
+  "n": 47,
+  "q": "The nurse has provided dietary teaching to a client who has a history of atherosclerosis and a recent laboratory test, indicating an increased cholesterol level. Which of the following statement by the client indicates a need for follow up.",
+  "o": [
+   "I flavor my fish with lemon juice",
+   "I cook my food with canola oil",
+   "I take an omega-3 supplement daily",
+   "I eat two poached eggs for breakfast every morning"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "D"
+   ],
+   "extra": "",
+   "why": "Two eggs daily contribute significant dietary cholesterol and require follow-up."
+  }
+ },
+ {
+  "n": 48,
+  "q": "The nurse nurses teaching a car seat safety to the parents of a month old infant. Which of the following statements by the parent indicates the correct understanding of the teaching?",
+  "o": [
+   "We will place the car seat rear facing in the middle of the back seat",
+   "We will be sure that a hand can fit between the infant and the car seat harness",
+   "The car seat we have is a booster seat that is anchored in with the car lap belt",
+   "The car seat shoulder harness straps should be below the level of the infant.s armpits."
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "Infants should ride rear-facing in the center of the back seat whenever possible."
+  }
+ },
+ {
+  "n": 49,
+  "q": "The nurse is providing discharge teaching to a young adult female client who has been newly prescribed carbamazepine for seizures. Which of the following client statements indicates an understanding of the teaching?",
+  "o": [
+   "I will weigh myself every week to check for weight gain",
+   "If I want children, I should not delay starting a family",
+   "I will use condoms as a method for birth control",
+   "A low sodium diet will need to be followed while on this medication"
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "B"
+   ],
+   "extra": "",
+   "why": "Carbamazepine is teratogenic; clients desiring pregnancy should discuss family planning early."
+  }
+ },
+ {
+  "n": 50,
+  "q": "The nurse working in an ambulatory healthcare center has assessed the following clients who are waiting to see the PCP. The nurse should immediately remove removed from the waiting room and place in an examining room the client who has.",
+  "o": [
+   "Reports of burning and arthritis with a linear rash of vesicles, extending around the right lower rib cage",
+   "A 1 mm area that is flat and red at the site of a Mantoux test which was administered 48 hours ago",
+   "Congestive heart failure and reports gaining 3 pounds in the last three days",
+   "A fever of 99.6°F and is reporting generalized pain and malaise and a history of borderline personality disorder."
+  ],
+  "letters": [
+   "a",
+   "b",
+   "c",
+   "d"
+  ],
+  "key": {
+   "letters": [
+    "A"
+   ],
+   "extra": "",
+   "why": "A painful vesicular rash in a dermatomal pattern suggests shingles; the client should be isolated from susceptible individuals immediately"
+  }
+ }
+]

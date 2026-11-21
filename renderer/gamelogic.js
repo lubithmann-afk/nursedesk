@@ -41,7 +41,8 @@ function friend(correct,level,hidden,rng){                      // a simulated f
 }
 // Categories offered on the menu. Questions are the app's own bank (single answer, four options only).
 function categories(QD,MEDS,opts){                                 // opts.all: include select-all and other formats (challenge mode)
-  const bank=opts&&opts.all?QD.bank.slice():QD.bank.filter(playable),src=QD.src,top=QD.top,out=[];
+  const xs=QD.bank.filter(q=>q.x&&(opts&&opts.all||playable(q)));            // outside (non-Galen) sets: their own group only
+  const bank=(opts&&opts.all?QD.bank.slice():QD.bank.filter(playable)).filter(q=>!q.x),src=QD.src,top=QD.top,out=[];
   const isWq=s=>/^Weekly quiz/.test(s),isDk=s=>/^Class slides/.test(s);
   out.push({key:'all',group:'Everything',label:'All questions mixed',own:bank,fill:[]});
   top.forEach((t,i)=>{const own=bank.filter(q=>q.t===i);if(own.length)out.push({key:'t:'+i,group:'Test topics',label:t,own,fill:bank})});
@@ -49,6 +50,7 @@ function categories(QD,MEDS,opts){                                 // opts.all: 
   const wq=bank.filter(q=>isWq(src[q.s]));if(wq.length)out.push({key:'wq',group:'Weekly quizzes',label:'All weekly quizzes',own:wq,fill:bank});
   src.forEach((s,i)=>{if(!isWq(s))return;const own=bank.filter(q=>q.s===i);if(own.length)out.push({key:'s:'+i,group:'Weekly quizzes',label:s.replace(/^Weekly quiz\s*[–-]\s*/,''),own,fill:wq})});
   const dk=bank.filter(q=>isDk(src[q.s]));if(dk.length)out.push({key:'dk',group:'Class PowerPoints',label:'All class PowerPoint questions',own:dk,fill:bank});
+  if(xs.length)out.push({key:'xs',group:'Other study sets (not Galen)',label:'All outside questions (not Galen)',own:xs,fill:xs});
   if(MEDS&&MEDS.cats){
     const byId=new Map(bank.map(q=>[q.id,q])),all=new Set();MEDS.meds.forEach(m=>m.q.forEach(id=>all.add(id)));
     const anyMed=[...all].map(id=>byId.get(id)).filter(Boolean);const ph=bank.filter(q=>top[q.t]==='Pharmacology & Labs');
