@@ -43,6 +43,7 @@ button:disabled{opacity:.5}
 .chat{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.chat h3{font-size:15px;margin:0 0 8px}
 .cm{padding:10px 12px;border-radius:10px;margin-bottom:8px;font-size:15px;line-height:1.5}
 .cm.user{background:var(--bg);border:1px solid var(--line)}.cm.assistant{background:var(--card);border-left:4px solid var(--acc);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.hintbox{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}.hintbox summary{cursor:pointer;font-weight:600;color:var(--acc)}.hintbox textarea{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);resize:vertical;margin-bottom:8px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.chips button{padding:6px 10px;font-size:13px;border-radius:99px}
 .chat textarea{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical;margin-bottom:8px}
 .sv{font-size:12px;color:var(--mut);margin:0 0 10px}

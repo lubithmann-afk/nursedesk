@@ -320,3 +320,13 @@ console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
  console.assert(total===galen,'every Galen question is in a Library question deck');
  console.assert(!qdk.some(d=>/Not Galen/.test(d.name)),'outside sets are not in the Library');
  console.log('library question deck tests ran')}
+{const HL=require('../renderer/hintlogic.js');
+ const q={q:'Which client should the nurse see first?',o:['Client alpha','Client bravo','Client charlie','Client delta'],a:2,r:'SECRET-RATIONALE charlie is unstable'};
+ const m=HL.buildMessages(q,[2,0,1,3],[{role:'user',content:'What is this asking?'}]);
+ const all=JSON.stringify(m)+HL.HINT_RULES;
+ console.assert(m.length===1&&/Student: What is this asking/.test(m[0].content)&&/A\. Client charlie/.test(m[0].content),'hint context lists the options in the shown order');
+ console.assert(!/SECRET-RATIONALE|Keyed|correct answer/i.test(JSON.stringify(m)),'hint context never contains the key or rationale');
+ console.assert(/Never say or imply which option is correct/.test(HL.HINT_RULES),'hint rules forbid revealing the answer');
+ console.assert(HL.leaks('The correct answer is C.')&&HL.leaks('Option B is correct')&&HL.leaks('I would choose D')&&HL.leaks('C is the correct choice'),'answer-giving replies are caught');
+ console.assert(!HL.leaks('Think about ABCs: which client has an airway or breathing problem?')&&!HL.leaks('Look at option B and ask what changed in the client.'),'coaching replies pass');
+ console.log('hint tests ran')}

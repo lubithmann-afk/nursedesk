@@ -133,7 +133,7 @@ const realQuestion = msgs => { const u = (msgs || []).filter(x => x.role === 'us
 ipcMain.handle('ai:ask', async (e, messages, extra, opts) => {
   try {
     if (!getKey()) {                                   // no API key: built-in AI if the student switched it on, else just their own materials
-      const q = realQuestion(messages); let hits = []; try { hits = idx.search(q, 4); } catch (err) {}
+      const q = realQuestion(messages); let hits = []; try { hits = idx.search(q, opts && opts.noQuestions ? 20 : 4).filter(h => !(opts && opts.noQuestions && String(h.deckId).startsWith('questions-'))).slice(0, 4); } catch (err) {}
       const L = LOCAL();
       if (L.state().enabled && L.state().installed) {
         e.sender.send('ai:status', 'Built-in AI is thinking (this can take a minute)…');
@@ -142,7 +142,7 @@ ipcMain.handle('ai:ask', async (e, messages, extra, opts) => {
       return { ok: true, text: offlineText(q, hits), sources: [], offline: true };
     }
     const web = !!(opts && opts.web === true);
-    const r = await ask(messages, { key: getKey(), domains: settings().domains, extraSystem: extra || '', allowWeb: web, categories: CATEGORIES, searchSlides: q => idx.search(q, 6), onStatus: s => e.sender.send('ai:status', s) });
+    const r = await ask(messages, { key: getKey(), domains: settings().domains, extraSystem: extra || '', allowWeb: web, categories: CATEGORIES, searchSlides: q => (opts && opts.noQuestions ? idx.search(q, 20).filter(h => !String(h.deckId).startsWith('questions-')).slice(0, 6) : idx.search(q, 6)), onStatus: s => e.sender.send('ai:status', s) });
     let note = null;
     if (web && r.usedWeb && r.save && r.sources.length) {          // approved web answer with cited pages -> keep it for next time
       try {

@@ -119,6 +119,36 @@ async function ask(t,text){
   }
   btn.disabled=false;const ci=$('#ci');ci.disabled=false;ci.value='';
 }
+// ---- "Think it through": coaching hints before you answer (never the answer; see renderer/hintlogic.js)
+const HL=()=>window.HintLogic&&window.api&&window.api.ask?window.HintLogic:null;
+function hintHTML(t){
+  if(!HL()||t.pick!==null)return'';
+  const open=(t.hint&&t.hint.length)||t.hintOpen;
+  return`<details class="hintbox" id="hb" ${open?'open':''}><summary>Need help thinking it through? Ask for a hint</summary>
+   <div class="cnt" style="margin:6px 0 8px">I will not give you the answer or say which option is right. I will help you work out how to think about it.</div>
+   ${(t.hint||[]).map(m=>`<div class="cm ${m.role}">${m.role==='assistant'?fmtA(m.content):fmt(m.content)}</div>`).join('')}<div id="hl"></div>
+   <div class="chips">${['What is this question really asking?','Which framework fits here?','What should I look for in the options?','Quiz me on the key concept'].map(c=>`<button data-h="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+   <textarea id="hi" rows="2" placeholder="Ask a question to guide your thinking…"></textarea><button class="p" id="ha" style="width:100%">Ask for a hint</button></details>`}
+async function askHint(t,text){
+  text=(text||'').trim();const H=HL();if(!text||!H)return;
+  const btn=$('#ha'),inp=$('#hi');btn.disabled=true;inp.disabled=true;
+  t.hint=t.hint||[];t.hint.push({role:'user',content:text});
+  $('#hl').insertAdjacentHTML('beforebegin',`<div class="cm user">${fmt(text)}</div>`);$('#hl').innerHTML='<div class="cm assistant">Thinking…</div>';
+  try{
+    const r=await window.api.ask(H.buildMessages(t.q,t.idx,t.hint),H.HINT_RULES,{web:false,noQuestions:true});
+    if(!r||!r.ok)throw new Error(r&&r.error||'error');
+    const reply=H.leaks(r.text)?H.SAFE:r.text;
+    t.hint.push({role:'assistant',content:reply});
+    $('#hl').innerHTML='';$('#hl').insertAdjacentHTML('beforebegin',`<div class="cm assistant">${fmtA(reply)}</div>`);
+  }catch(e){t.hint.pop();$('#hl').innerHTML='<div class="cm assistant">Could not get a hint right now. Check your AI key in Settings, then try again.</div>'}
+  btn.disabled=false;inp.disabled=false;inp.value='';
+}
+function wireHint(t){
+  if(!HL()||!$('#hi'))return;
+  $('#ha').onclick=()=>askHint(t,$('#hi').value);
+  document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>askHint(t,b.dataset.h));
+  $('#hb').addEventListener('toggle',()=>{t.hintOpen=$('#hb').open});
+}
 function wireChat(t){
   if(!SM||!$('#ci'))return;
   $('#ca').onclick=()=>ask(t,$('#ci').value);
@@ -211,12 +241,13 @@ function show(){
       return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${mk}</b><span>${L[k]}. ${esc(q.o[oi])}</span></button>`}
     if(ans){if(oi===q.a)c='ok';else if(k===t.pick)c='bad';else c='dim'}return`<button class="opt ${c}" data-k="${k}" ${ans?'disabled':''}><b>${L[k]}.</b><span>${esc(q.o[oi])}</span></button>`}).join('')}
   ${ans?rat(t)+(isOk(t)?'':mrButton(q.id))+chatHTML(t):''}
+  ${ans?'':hintHTML(t)}
   <div class="src">${esc(sn(q.s))} · ${esc(D.top[q.t])}</div></div>
   <div class="nav"><button id="ex">Save &amp; exit</button>${st.i>0?'<button id="pv">← Previous</button>':''}<button class="p" id="nx" ${ans||(multi&&t.sel&&t.sel.length)?'':'disabled'}>${ans?(st.i===n-1?'See results':'Next'):(multi?'Submit answer':'Next')}</button></div>`;
   document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;
     if(multi){t.sel=t.sel||[];const i=t.sel.indexOf(k);if(i<0)t.sel.push(k);else t.sel.splice(i,1);show();return}
     t.pick=k;const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
-  wireChat(t);
+  wireChat(t);wireHint(t);
   const asb=$('#asb');if(asb)asb.onclick=()=>{window.assist.set(!window.assist.on);show()};
   const mrd=$('#mrd');if(mrd)mrd.onclick=()=>{mrToggle(q.id);show()};
   $('#nx').onclick=()=>{if(multi&&!ans){t.pick=(t.sel||[]).slice().sort((a,b)=>a-b);const ok=isOk(t);record(q,ok);saveRun();show();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});return}
