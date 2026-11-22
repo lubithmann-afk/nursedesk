@@ -140,10 +140,12 @@ function weakTopics(){return topicStats().filter(s=>s.n>=2&&s.pct<75).sort((a,b)
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 let SM=null;
 async function initSample(){try{const s=await claude.use('sample');if(s){SM=s;if(st.run&&$('.rat')&&!$('#ci'))show()}}catch(e){}}
-function fmt(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')}
+const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+function fmt(s){return inl(s).replace(/\n/g,'<br>')}
+function fmtA(s){return window.aiBlocks?window.aiBlocks(inl(s)):fmt(s)}
 function chatHTML(t){
   if(!SM)return'';
-  return`<div class="chat"><h3>Ask a follow-up</h3>${(t.chat||[]).map(m=>`<div class="cm ${m.role}">${fmt(m.content)}</div>`).join('')}<div id="cb"></div>
+  return`<div class="chat"><h3>Ask a follow-up</h3>${(t.chat||[]).map(m=>`<div class="cm ${m.role}">${m.role==='assistant'?fmtA(m.content):fmt(m.content)}</div>`).join('')}<div id="cb"></div>
   <div class="chips">${['Why are the other options wrong?','Explain the concept simply','Give me a similar practice question'].map(c=>`<button data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
   <textarea id="ci" rows="2" placeholder="Ask anything about this question…"></textarea><button class="p" id="ca" style="width:100%">Ask</button></div>`}
 function ctxFor(t){const q=t.q;return`You are an NCLEX-RN tutor helping a nursing student (NUR 283 comprehensive exam prep). Answer follow-up questions about the practice question below. Be accurate, NCLEX-focused and concise (under about 150 words unless asked for more). Use plain text; **bold** is OK. If you think the keyed answer is clinically wrong or questionable, say so plainly, since some keys came from imperfect source material.\n\nQuestion: ${q.q}\nOptions:\n${t.idx.map((oi,k)=>L[k]+'. '+q.o[oi]).join('\n')}\nKeyed correct answer: ${corLetters(t)}\nStudent chose: ${t.pick===null?'(not answered)':(Array.isArray(t.pick)?t.pick.map(k=>L[k]).join(', '):L[t.pick])}\nRationale on file: ${q.r}`}
@@ -155,9 +157,9 @@ async function ask(t,text){
   box.innerHTML='<div class="cm assistant">Thinking…</div>';
   const msgs=t.chat.map((m,i)=>i===0?{role:m.role,content:ctxFor(t)+'\n\nStudent: '+m.content}:m);
   try{
-    const r=await SM(msgs,{cache:false,onText:({text})=>{box.innerHTML='<div class="cm assistant">'+fmt(text)+'</div>'}});
+    const r=await SM(msgs,{cache:false,onText:({text})=>{box.innerHTML='<div class="cm assistant">'+fmtA(text)+'</div>'}});
     t.chat.push({role:'assistant',content:r.text});
-    box.innerHTML='';box.insertAdjacentHTML('beforebegin',`<div class="cm assistant">${fmt(r.text)}</div>`);
+    box.innerHTML='';box.insertAdjacentHTML('beforebegin',`<div class="cm assistant">${fmtA(r.text)}</div>`);
   }catch(e){
     t.chat.pop();
     box.innerHTML=`<div class="cm assistant">${e&&e.code==='rate_limited'?'Too many requests right now. Wait a moment and try again.':e&&e.code==='not_granted'?'Follow-up questions are not available here.':'Could not get an answer. Try again.'}</div>`;

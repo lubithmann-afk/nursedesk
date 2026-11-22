@@ -13,13 +13,7 @@ function fmt(text){
     return r?`<a class="cite" data-d="${esc(r.deckId)}" data-n="${r.n}" title="Open this ${kind} in the Library">[${label}, ${kind} ${n}]</a>`:m;
   });
   t=t.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
-  const out=[];let list=false;
-  for(const line of t.split('\n')){
-    const b=/^\s*(?:[-•*]|\d+\.)\s+(.*)$/.exec(line);
-    if(b){if(!list){out.push('<ul>');list=true}out.push('<li>'+b[1]+'</li>')}
-    else{if(list){out.push('</ul>');list=false}out.push(line.trim()?'<p>'+line+'</p>':'')}
-  }
-  if(list)out.push('</ul>');return out.join('');
+  return window.aiBlocks?window.aiBlocks(t):t.replace(/\n/g,'<br>');
 }
 // ---------------- home
 async function home(){
