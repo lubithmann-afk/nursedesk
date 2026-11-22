@@ -73,7 +73,7 @@ function draw(){
     body=`<div class="rat ${t.ok?'ok':'bad'}"><strong>${t.ok?'Correct!':'Not quite.'}</strong>${t.ok?'':'The answer: <br>'+ans}</div>
     <div class="rat"><strong>Your reasoning</strong>${esc(t.guessed&&!t.text.trim()?'(You said you were not sure.)':t.text)}</div>
     ${t.feedback?`<div class="rat"><strong>Your coach</strong>${fmt(t.feedback)}</div>`:`<div class="rat"><strong>Coach unavailable</strong>${esc(t.err||'No feedback this time.')}</div>`}
-    <details style="margin-top:10px" ${t.feedback?'':'open'}><summary style="cursor:pointer">Rationale from the question bank</summary><div class="rat" style="white-space:pre-line">${esc(q.r||'')}</div></details>
+    <details style="margin-top:10px" ${t.feedback?'':'open'}><summary style="cursor:pointer">Rationale from the question bank</summary><div class="rat">${window.fmtRat?window.fmtRat(q.r||''):esc(q.r||'')}</div></details>
     ${!t.ok&&window.misreadToggle?`<button id="chmr" class="mrb ${window.misreadState(t.q.id)?'on':''}" style="width:100%;margin-top:10px">${window.misreadState(t.q.id)?'✓ Marked: I knew the answer, I just didn’t read everything (tap to undo)':'I knew the answer, I just didn’t read everything'}</button>`:''}
     <h3 style="margin:16px 0 6px;font-size:14px">Ask a follow-up question</h3>
     ${(t.chat||[]).map(m=>`<div class="cm ${m.role==='user'?'user':'assistant'}">${m.role==='user'?esc(m.content):fmt(m.content)}</div>`).join('')}${t.fbusy?'<div class="cnt">Your coach is thinking…</div>':''}${t.ferr?`<div class="cnt">${esc(t.ferr)}</div>`:''}

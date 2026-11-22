@@ -131,3 +131,20 @@ a.cite{color:var(--acc);cursor:pointer;text-decoration:underline;text-underline-
 .cnote{font-size:13px;color:var(--mut);margin-bottom:8px}#tutor .cm p{margin:0 0 8px}#tutor .cm ul{margin:0 0 8px 18px;padding:0}#tutor .log{max-height:none}
 /* eight tabs now: keep each label on one line and let the bar scroll sideways on small windows */
 #tabs{overflow-x:auto;scrollbar-width:thin}#tabs button{white-space:nowrap;padding:8px 11px;flex:none}#tabs .logo{flex:none;margin-right:8px}
+
+/* colour-coded rationale sections */
+.rat .rh{font-size:15px;font-weight:700;margin:12px 0 4px;padding-left:8px;border-left:4px solid var(--mut)}
+.rat .rh:first-child{margin-top:4px}
+.rat .rh-key{color:var(--ok);border-color:var(--ok)}
+.rat .rh-notes{color:var(--acc);border-color:var(--acc)}
+.rat .rh-bad{color:var(--bad);border-color:var(--bad)}
+.rat .rb{font-size:14px;line-height:1.45;margin:3px 0 3px 12px;padding-left:12px;position:relative}
+.rat .rb::before{content:'•';position:absolute;left:0}
+.rat .rb-key{font-size:16px;font-weight:600}
+.rat .rb-notes b,.rat .rb-bad b{font-weight:600}
+.rat .rb-bad{color:var(--mut)}.rat .rb-bad b{color:var(--ink)}
+.rat .re{font-weight:400;color:var(--mut)}
+.rat .rs{font-size:12px;font-style:italic;color:var(--mut);margin:6px 0 2px}
+.rat .rp{font-size:14px;line-height:1.5;margin:6px 0}
+.rat .rw{font-size:13px;line-height:1.45;margin:10px 0 2px;padding:8px 10px;border-radius:8px;border:1px solid #d9822b;background:color-mix(in srgb,#d9822b 12%,transparent)}
+.rat .rw b{color:#d9822b}

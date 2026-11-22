@@ -224,7 +224,7 @@ function show(){
 }
 function mrButton(id){const on=mrOn(id);return`<div style="margin:10px 0"><button id="mrd" class="mrb ${on?'on':''}" style="width:100%">${on?'✓ Marked: I knew the answer, I just didn’t read everything (tap to undo)':'I knew the answer, I just didn’t read everything'}</button></div>`}
 function rat(t){const ok=isOk(t);
-  return`<div class="rat ${ok?'ok':'bad'}"><strong>${ok?'Correct':'Incorrect'} — answer: ${corLetters(t)}</strong>${esc(t.q.r).replace(/\n/g,'<br>')}</div>`}
+  return`<div class="rat ${ok?'ok':'bad'}"><strong>${ok?'Correct':'Incorrect'} — answer: ${corLetters(t)}</strong><div class="rfmt">${window.fmtRat?window.fmtRat(t.q.r):esc(t.q.r).replace(/\n/g,'<br>')}</div></div>`}
 function results(){
   delete P.run;flush();
   const done=st.run.filter(x=>x.pick!==null);const ok=done.filter(isOk).length;const pct=done.length?Math.round(ok/done.length*100):0;

@@ -294,3 +294,8 @@ console.assert(/Outside your class materials:/.test(TL.TUTOR_RULES)&&/Never inve
 console.log('tutor tests ran');}
 console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
 })();
+{const RF=require('../renderer/ratfmt.js');
+ const h=RF.fmt('Weekly quiz key (one answer):\n• Medication reconciliation\n(This answer is keyed in the original quiz source.)\n\nStudy notes from your master guide (not official Galen rationales):\n• “Medication reconciliation” – Prevents omissions\n\nNot correct:\n• “Providing a list” – Useful but less safety-critical\n\nConflicting answer: the same question in X gives a different answer: "Y".');
+ console.assert(/rh-key/.test(h)&&/rh-notes/.test(h)&&/rh-bad/.test(h)&&/rw-conf/.test(h)&&/class="rs"/.test(h)&&/rb-bad/.test(h),'rationale sections get their own styles');
+ console.assert(!/<script/.test(RF.fmt('<script>alert(1)</script>'))&&RF.fmt('<b>')==='<div class="rp">&lt;b&gt;</div>','rationale formatter escapes HTML');
+ console.log('rationale format tests ran')}
