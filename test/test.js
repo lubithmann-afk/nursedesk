@@ -309,3 +309,8 @@ console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
  console.assert(MU.MODES.join()==='pad,moon,files','music modes');
  console.log('music tests ran')}
 
+{const RF=require('../renderer/ratfmt.js');
+ const h=RF.aiBlocks('<b>Graves disease overview</b>\n\nYour library covers this.\n- <b>What it is:</b> hyperthyroidism [Unit 9 Endocrine, slide 11].\n- <b>Labs:</b> T3, T4\n\n<b>Your question:</b> my own explanation, not from a source.');
+ console.assert(/class="aiah">Graves disease overview/.test(h)&&/class="aiab"><span class="aial">What it is:/.test(h)&&/class="aiac">\[Unit 9 Endocrine, slide 11\]/.test(h)&&/class="aiaw">my own explanation/.test(h)&&/class="aiap"><span class="aial">Your question:/.test(h),'AI answers get headline, label, citation and warning styles');
+ console.assert(RF.aiBlocks('Short answer here.')==='<div class="aiap">Short answer here.</div>','a plain first sentence is not turned into a headline');
+ console.log('AI answer format tests ran')}

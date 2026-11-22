@@ -27,6 +27,25 @@ function fmt(text){
   }
   return out;
 }
+// ---- AI answers: headline, label + detail bullets, citations and "not from a source" warnings get their own colours.
+// Input is HTML that already had escaping, **bold** and links applied (one line per \n); output is the block structure.
+function aiBlocks(h){
+  const out=[];let first=true;
+  const label=t=>t.replace(/^<b>([^<]{1,70}?):?<\/b>:?\s*/,(m,x)=>`<span class="aial">${x}:</span> `);
+  const deco=t=>t.replace(/\[([^\[\]<>]{3,140}?,\s*(?:slide|page)s?\s*\d+[^\]<>]*)\]/gi,'<span class="aiac">[$1]</span>')
+    .replace(/(my own explanation[^.<]*|not from a source|general knowledge[^.<]*)/gi,'<span class="aiaw">$1</span>');
+  for(const raw of String(h).split('\n')){
+    const l=raw.trim();if(!l){continue}
+    if(/^-{3,}$/.test(l)){out.push('<hr class="aiahr">');first=false;continue}
+    const b=/^(?:[-•*]|\d+\.)\s+(.*)$/.exec(l);
+    if(b){out.push(`<div class="aiab">${deco(label(b[1]))}</div>`);first=false;continue}
+    const plain=l.replace(/<[^>]+>/g,'');
+    if(/^<b>[^<]+<\/b>:?$/.test(l)||(first&&plain.length<=80&&!/[.?!:]$/.test(plain))){out.push(`<div class="aiah">${plain}</div>`);first=false;continue}
+    out.push(`<div class="aiap">${deco(label(l))}</div>`);first=false;
+  }
+  return out.join('');
+}
+root.aiBlocks=aiBlocks;
 root.fmtRat=fmt;
-if(typeof module!=='undefined'&&module.exports)module.exports={fmt,kind};
+if(typeof module!=='undefined'&&module.exports)module.exports={fmt,kind,aiBlocks};
 })(typeof window!=='undefined'?window:globalThis);

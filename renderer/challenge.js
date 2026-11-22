@@ -3,7 +3,9 @@
 (function(){
 const G=window.GameLogic,app=()=>document.getElementById('practice'),$=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const fmt=s=>inl(s).replace(/\n/g,'<br>');
+const fmtA=s=>window.aiBlocks?window.aiBlocks(inl(s)):fmt(s);
 const L='ABCDEFGH',FALLBACK='In a sentence or two, explain why you chose that answer. What did you notice first in the question, and what could harm this client?';
 let C=null,armed=false;
 const progress=()=>{try{const p=JSON.parse(localStorage.getItem('nur283_progress')||'null');return p&&p.a?p.a:{}}catch(e){return{}}};
@@ -65,14 +67,14 @@ function draw(){
   let body='';
   if(t.stage==='choose')body=`<div class="nav"><button id="chq">${armed?'Tap again to quit':'Quit challenge'}</button>${C.i>0?'<button id="chpv">← Previous</button>':''}<button class="p" id="chlk" ${t.sel.length?'':'disabled'}>Lock in my answer</button></div>`;
   else if(t.stage==='coachwait')body=`<div class="rat"><strong>Your coach</strong>Reading your answer…</div>`;
-  else if(t.stage==='explain')body=`<div class="rat"><strong>Your coach</strong>${fmt(t.prompt)}${t.err?`<div class="cnt" style="margin-top:6px">(Coach unavailable: ${esc(t.err)} Using a standard prompt.)</div>`:''}</div>
+  else if(t.stage==='explain')body=`<div class="rat"><strong>Your coach</strong>${fmtA(t.prompt)}${t.err?`<div class="cnt" style="margin-top:6px">(Coach unavailable: ${esc(t.err)} Using a standard prompt.)</div>`:''}</div>
     <textarea class="f" id="chtx" rows="4" style="width:100%;margin-top:10px" placeholder="Explain your thinking in a few sentences…">${esc(t.text)}</textarea>
     <div class="nav"><button id="chg">I guessed / I’m not sure</button>${C.i>0?'<button id="chpv">← Previous</button>':''}<button class="p" id="chsub" ${t.text.trim().length>=3?'':'disabled'}>Submit my reasoning</button></div>`;
   else if(t.stage==='feedbackwait')body=`<div class="rat"><strong>Your reasoning</strong>${esc(t.guessed&&!t.text.trim()?'(You said you were not sure.)':t.text)}</div><div class="rat"><strong>Your coach</strong>Thinking about your reasoning…</div>`;
   else{const ans=correctIx(t).map(k=>`${L[k]}. ${esc(q.o[t.idx[k]])}`).join('<br>');
     body=`<div class="rat ${t.ok?'ok':'bad'}"><strong>${t.ok?'Correct!':'Not quite.'}</strong>${t.ok?'':'The answer: <br>'+ans}</div>
     <div class="rat"><strong>Your reasoning</strong>${esc(t.guessed&&!t.text.trim()?'(You said you were not sure.)':t.text)}</div>
-    ${t.feedback?`<div class="rat"><strong>Your coach</strong>${fmt(t.feedback)}</div>`:`<div class="rat"><strong>Coach unavailable</strong>${esc(t.err||'No feedback this time.')}</div>`}
+    ${t.feedback?`<div class="rat"><strong>Your coach</strong>${fmtA(t.feedback)}</div>`:`<div class="rat"><strong>Coach unavailable</strong>${esc(t.err||'No feedback this time.')}</div>`}
     <details style="margin-top:10px" ${t.feedback?'':'open'}><summary style="cursor:pointer">Rationale from the question bank</summary><div class="rat">${window.fmtRat?window.fmtRat(q.r||''):esc(q.r||'')}</div></details>
     ${!t.ok&&window.misreadToggle?`<button id="chmr" class="mrb ${window.misreadState(t.q.id)?'on':''}" style="width:100%;margin-top:10px">${window.misreadState(t.q.id)?'✓ Marked: I knew the answer, I just didn’t read everything (tap to undo)':'I knew the answer, I just didn’t read everything'}</button>`:''}
     <h3 style="margin:16px 0 6px;font-size:14px">Ask a follow-up question</h3>
