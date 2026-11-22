@@ -154,6 +154,10 @@ a.cite{color:var(--acc);cursor:pointer;text-decoration:underline;text-underline-
 #music.on{opacity:1;background:var(--acc);border-color:var(--acc);color:#fff}
 #musicpop{position:fixed;bottom:62px;right:14px;z-index:60;width:260px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
 #musicpop[hidden]{display:none}
-#musicpop .mrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#musicpop .murow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 #musicpop input[type=range]{flex:1}
 #musicpop .mnote{font-size:12px;color:var(--mut)}
+
+#musicpop{width:300px}
+#musicpop button{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);cursor:pointer}
+#musicpop .mnote{margin-top:6px;line-height:1.4}

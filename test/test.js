@@ -304,5 +304,8 @@ console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
  console.assert(Math.abs(MU.ns(69)-440)<1e-9&&Math.abs(MU.ns(60)-261.63)<0.01,'music note frequencies');
  console.assert(MU.BELLS.every(m=>[0,2,4,7,9].includes(m%12)),'bell notes stay in the C major pentatonic scale');
  console.assert(MU.clampVol(5)===1&&MU.clampVol(-1)===0&&MU.clampVol('x')===0.3,'music volume is clamped');
+ console.assert(MU.MOON.bars.length===4&&MU.MOON.bars.every(b=>b.rh.length===3&&b.bass.length===2),'Moonlight figure: four bars of triplet groups over octave basses');
+ console.assert(MU.MOON.bars[0].rh.join()==='56,61,64'&&MU.MOON.bars[0].bass.join()==='37,49','Moonlight bar 1 is G#-C#-E over C# octaves');
+ console.assert(MU.MODES.join()==='pad,moon,files','music modes');
  console.log('music tests ran')}
 
