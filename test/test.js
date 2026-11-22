@@ -299,3 +299,10 @@ console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
  console.assert(/rh-key/.test(h)&&/rh-notes/.test(h)&&/rh-bad/.test(h)&&/rw-conf/.test(h)&&/class="rs"/.test(h)&&/rb-bad/.test(h),'rationale sections get their own styles');
  console.assert(!/<script/.test(RF.fmt('<script>alert(1)</script>'))&&RF.fmt('<b>')==='<div class="rp">&lt;b&gt;</div>','rationale formatter escapes HTML');
  console.log('rationale format tests ran')}
+{const MU=require('../renderer/music.js');
+ console.assert(MU.CHORDS.length===4&&MU.CHORDS.every(c=>c.length>=4&&c.every(m=>m>=36&&m<=72)),'music chords are low, warm voicings');
+ console.assert(Math.abs(MU.ns(69)-440)<1e-9&&Math.abs(MU.ns(60)-261.63)<0.01,'music note frequencies');
+ console.assert(MU.BELLS.every(m=>[0,2,4,7,9].includes(m%12)),'bell notes stay in the C major pentatonic scale');
+ console.assert(MU.clampVol(5)===1&&MU.clampVol(-1)===0&&MU.clampVol('x')===0.3,'music volume is clamped');
+ console.log('music tests ran')}
+
