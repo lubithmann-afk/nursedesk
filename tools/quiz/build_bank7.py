@@ -13,7 +13,7 @@ ORDER=list(LABEL)
 P=[]
 for f in sorted(glob.glob(os.path.join(ROOT,'data','seed','*','deck.json'))):
     d=json.load(open(f))
-    if d['id'].startswith('ati-') or 'syllabus' in d['id']:continue
+    if d['id'].startswith('ati-') or 'syllabus' in d['id'] or d.get('kind')=='questions':continue
     nm=re.sub(r'Galen\s+(Live Review-RN|System Focused Review)\s*-\s*','',d['name']);nm=re.sub(r'\s+Student$','',nm)
     for s in d['slides']:P.append((nm,s['n'],s['text']))
 def find(prefix,n,sub):

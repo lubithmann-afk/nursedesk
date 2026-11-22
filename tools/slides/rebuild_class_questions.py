@@ -10,7 +10,9 @@ ws=lambda s:re.sub(r'\s+',' ',s.replace(' ',' ')).strip()
 nk=lambda s:re.sub(r'[^a-z0-9]','',s.lower().replace('’',"'"))
 decks={}
 for f in glob.glob(os.path.join(ROOT,'data','seed','*','deck.json')):
-    d=json.load(open(f,encoding='utf8'));decks[d['id']]=d
+    d=json.load(open(f,encoding='utf8'))
+    if d.get('kind')=='questions':continue
+    decks[d['id']]=d
 slides=[(did,s) for did,d in decks.items() for s in d['slides']]
 def lines_of(s):
     out=[ws(x) for x in s['text'] if ws(x)]

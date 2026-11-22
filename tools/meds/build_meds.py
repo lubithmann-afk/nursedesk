@@ -27,7 +27,7 @@ decks={}
 units=[]  # (deckid, kind, n, title, lines)
 for f in sorted(glob.glob(os.path.join(ROOT,'data','seed','*','deck.json'))):
     d=json.load(open(f))
-    if d['id'] in SKIP_DECKS: continue
+    if d['id'] in SKIP_DECKS or d.get('kind')=='questions': continue
     kind='page' if d.get('kind')=='pdf' else 'slide'
     decks[d['id']]={'n':d['name'],'k':kind}
     for s in d['slides']:

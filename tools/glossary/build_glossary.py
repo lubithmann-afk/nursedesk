@@ -95,7 +95,7 @@ def norm(s):return re.sub(r'\s+',' ',s.replace('’',"'").replace(' ',' ')).str
 decks={};P=[]
 for f in sorted(glob.glob(os.path.join(ROOT,'data','seed','*','deck.json'))):
     d=json.load(open(f))
-    if 'syllabus' in d['id']:continue
+    if 'syllabus' in d['id'] or d.get('kind')=='questions':continue
     nm=re.sub(r'Galen\s+(Live Review-RN|System Focused Review)\s*-\s*','',d['name']);nm=re.sub(r'\s+Student$','',nm)
     pdf=d.get('kind')=='pdf'
     for s in d['slides']:P.append({'deck':d['id'],'nm':'ATI' if pdf else nm,'pdf':pdf,'n':s['n'],'lines':s['text']})

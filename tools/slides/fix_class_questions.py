@@ -9,7 +9,9 @@ ws=lambda s:re.sub(r'\s+',' ',s.replace(' ',' ')).strip()
 nk=lambda s:re.sub(r'[^a-z0-9]','',s.lower().replace('’',"'"))
 decks={}
 for f in glob.glob(os.path.join(ROOT,'data','seed','*','deck.json')):
-    d=json.load(open(f,encoding='utf8'));decks[d['id']]=d
+    d=json.load(open(f,encoding='utf8'))
+    if d.get('kind')=='questions':continue
+    decks[d['id']]=d
 def slide_for(key):
     for did,d in decks.items():
         for i,s in enumerate(d['slides']):

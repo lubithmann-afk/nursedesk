@@ -23,3 +23,5 @@ open('quiz.html','w').write(open('tpl.html').read().replace('/*DATA*/',data))
 print(len(bank),'questions written')
 # Class-slide questions must be word for word from the decks: re-apply the verified corrections (and drop questions that are not on any slide)
 import subprocess;subprocess.run([sys.executable,os.path.join(ROOT,'tools','slides','fix_class_questions.py')],check=True)
+
+subprocess.run([sys.executable,os.path.join(ROOT,'tools','library','build_question_decks.py')],check=True)

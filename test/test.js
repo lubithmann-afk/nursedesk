@@ -153,7 +153,7 @@ const GLD=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','glossary.j
 console.assert(GLD.terms.length>600&&new Set(GLD.terms.map(x=>x.t.toLowerCase())).size===GLD.terms.length,'many glossary terms, none duplicated');
 console.assert(GLD.terms.every(x=>x.d&&x.d.length>=3&&GLD.cats.includes(x.c)),'every term has a definition and a valid category');
 const gnorm=s=>String(s).replace(/’/g,"'").replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
-const gdecks=new Map();for(const f of fs.readdirSync(path.join(__dirname,'..','data','seed'))){const d=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','seed',f,'deck.json'),'utf8'));gdecks.set(d.id,d)}
+const gdecks=new Map();for(const f of fs.readdirSync(path.join(__dirname,'..','data','seed'))){const d=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','seed',f,'deck.json'),'utf8'));if(d.kind!=='questions')gdecks.set(d.id,d)}
 const gmat=GLD.terms.filter(x=>x.m);
 console.assert(gmat.length>50&&gmat.every(x=>{const d=gdecks.get(x.m.d);const sl=d&&d.slides.find(s=>s.n===x.m.n);return sl&&sl.text.some(l=>gnorm(l).includes(gnorm(x.m.l).slice(0,60)))}),'every class-material glossary entry cites a real slide or page line');
 console.assert(gmat.every(x=>{const d=gdecks.get(x.m.d);const sl=d.slides.find(s=>s.n===x.m.n);const blob=gnorm(sl.text.join(' ')).toLowerCase();return gnorm(x.d).toLowerCase().replace(/[.)]+$/,'').split(' ').slice(0,4).every(w=>blob.includes(w.replace(/[.,;]/g,'')))}),'class-material definitions come from the cited slide text');
@@ -266,7 +266,7 @@ console.log('plain-language drug text tests ran:',own.length,'drugs');}
 // Class-slide questions are word for word from the decks: the stem and every option must appear in the same slide; no duplicate options; none written by the app
 {const QQ=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,''));
 const nkk=s=>String(s).toLowerCase().replace(/[’‘]/g,"'").replace(/[^a-z0-9]/g,'');
-const slidesAll=[];for(const f of fs.readdirSync(path.join(__dirname,'..','data','seed'))){const d=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','seed',f,'deck.json'),'utf8'));d.slides.forEach(s=>slidesAll.push(nkk(s.text.join(' '))))}
+const slidesAll=[];for(const f of fs.readdirSync(path.join(__dirname,'..','data','seed'))){const d=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','seed',f,'deck.json'),'utf8'));if(d.kind!=='questions')d.slides.forEach(s=>slidesAll.push(nkk(s.text.join(' '))))}
 const cls=QQ.bank.filter(q=>/^Class slides/.test(QQ.src[q.s]));
 const missing=cls.filter(q=>{const st=nkk(q.q.replace(/\s*\[In this app[^\]]*\]/,''));const sl=slidesAll.find(s=>s.includes(st.slice(0,80)));return !sl||!q.o.every(o=>sl.includes(nkk(o.replace(/^[“"]|[”"]$/g,''))))});
 console.assert(cls.length>=60&&missing.length===0,'every class-slide question and each of its options appears word for word on its slide: '+missing.map(q=>q.id));
@@ -314,3 +314,9 @@ console.log('all tests ran; calls',calls,'| top hit:',r[0].title);
  console.assert(/class="aiah">Graves disease overview/.test(h)&&/class="aiab"><span class="aial">What it is:/.test(h)&&/class="aiac">\[Unit 9 Endocrine, slide 11\]/.test(h)&&/class="aiaw">my own explanation/.test(h)&&/class="aiap"><span class="aial">Your question:/.test(h),'AI answers get headline, label, citation and warning styles');
  console.assert(RF.aiBlocks('Short answer here.')==='<div class="aiap">Short answer here.</div>','a plain first sentence is not turned into a headline');
  console.log('AI answer format tests ran')}
+{const sd=path.join(__dirname,'..','data','seed');const qdk=fs.readdirSync(sd).filter(x=>x.startsWith('questions-')).map(x=>JSON.parse(fs.readFileSync(path.join(sd,x,'deck.json'),'utf8')));
+ const total=qdk.reduce((s,d)=>s+d.slides.length,0),galen=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','questions.js'),'utf8').replace(/^window\.QD=/,'').replace(/;$/,'')).bank.filter(q=>!q.x).length;
+ console.assert(qdk.length>=30&&qdk.every(d=>d.kind==='questions'&&d.slides.every(s=>/^Question: /.test(s.text[0])&&s.text.some(l=>/^Correct answers?: /.test(l)))),'question decks in the Library have the question, options and answer');
+ console.assert(total===galen,'every Galen question is in a Library question deck');
+ console.assert(!qdk.some(d=>/Not Galen/.test(d.name)),'outside sets are not in the Library');
+ console.log('library question deck tests ran')}
